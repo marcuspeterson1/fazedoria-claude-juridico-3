@@ -10,7 +10,6 @@
     "integracoes/",
     "modelos/",
     "skills/configurar-kit3/",
-    "skills/controller-fila/",
     "skills/executar-tarefa/",
     "skills/resumo-do-processo/",
     "skills/revisar-entrega/",
@@ -23,12 +22,12 @@
     "manifesto-arquivos.json"
   ],
   "mesclar_sem_apagar": [
-    "metodo-euro.json"
+    "escritorio.json"
   ],
   "preservar_sempre": [
-    ".metodo-euro.local.json",
-    ".metodo-euro-contextos/",
-    ".metodo-euro-runtime/",
+    ".escritorio.local.json",
+    ".contextos-autos/",
+    ".esteira-runtime/",
     ".env",
     "fila/",
     "entregas/",

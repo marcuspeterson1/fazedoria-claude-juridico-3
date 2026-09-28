@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""CLI sem dependências do Kit 3 Método Euro."""
+"""CLI sem dependências do Kit 3 — Esteira de Petições operada por uma única pessoa."""
 from __future__ import annotations
 
 import argparse
-import base64
 import hashlib
 import json
 import os
@@ -12,7 +11,6 @@ import shutil
 import subprocess
 import sys
 import platform
-import uuid
 import getpass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,11 +18,10 @@ from pathlib import Path
 from conectores import sync as sync_connector
 
 ROOT = Path(__file__).resolve().parent
-LOCAL = ROOT / ".metodo-euro.local.json"
-SHARED = ROOT / "metodo-euro.json"
-INBOX_DIR = ROOT / ".metodo-euro-inbox"
+LOCAL = ROOT / ".escritorio.local.json"
+SHARED = ROOT / "escritorio.json"
+INBOX_DIR = ROOT / ".intimacoes-inbox"
 INBOX_STATE = INBOX_DIR / "intimacoes.json"
-VALID_ROLES = {"dono", "controller", "advogado"}
 VALID_AGENTS = {"claude", "codex"}
 TRANSITIONS = {
     "aberta": {"em_execucao"},
@@ -61,30 +58,8 @@ def repo_url():
     result = subprocess.run(["git", "remote", "get-url", "origin"], cwd=ROOT, text=True, capture_output=True)
     return result.stdout.strip() if result.returncode == 0 else ""
 
-def make_invite(shared, papel="advogado"):
-    if papel not in {"controller", "advogado"}:
-        raise SystemExit("Código de entrada permitido somente para Controller ou Advogado.")
-    org = shared.get("organizacao") or {}
-    payload = {"v": 1, "organizacao_id": org.get("id"), "escritorio": shared.get("nome_escritorio"),
-               "repositorio": org.get("repositorio"), "papel": papel}
-    raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()
-    body = base64.urlsafe_b64encode(raw).decode().rstrip("=")
-    return f"EURO1.{body}.{hashlib.sha256(raw).hexdigest()[:12]}"
-
-def read_invite(code):
-    try:
-        prefix, body, check = code.strip().split(".", 2)
-        if prefix != "EURO1": raise ValueError
-        raw = base64.urlsafe_b64decode(body + "=" * (-len(body) % 4))
-        if hashlib.sha256(raw).hexdigest()[:12] != check: raise ValueError
-        data = json.loads(raw)
-        if not all(data.get(k) for k in ("organizacao_id", "escritorio", "repositorio")): raise ValueError
-        return data
-    except (ValueError, json.JSONDecodeError):
-        raise SystemExit("Código de entrada inválido ou alterado. Solicite outro ao Controller.")
-
 def auto_git(paths, message):
-    if os.getenv("METODO_EURO_NO_AUTO_GIT") == "1" or not (ROOT / ".git").exists(): return
+    if os.getenv("KIT3_NO_AUTO_GIT") == "1" or not (ROOT / ".git").exists(): return
     local = load(LOCAL) if LOCAL.exists() else {}
     if not local.get("sincronizacao_automatica", True): return
     configure_git_credentials()
@@ -97,10 +72,10 @@ def auto_git(paths, message):
         subprocess.run(["git", "rebase", "--abort"], cwd=ROOT, capture_output=True, **quiet)
         raise SystemExit("Sincronização encontrou conflito. As duas versões foram preservadas para conciliação.")
     if subprocess.run(["git", "push"], cwd=ROOT, capture_output=True, **quiet).returncode:
-        raise SystemExit("A alteração ficou salva neste computador, mas o envio automático ao escritório falhou.")
+        raise SystemExit("A alteração ficou salva neste computador, mas o envio automático ao histórico falhou.")
 
 def pull_before_read():
-    if os.getenv("METODO_EURO_NO_AUTO_GIT") == "1" or not (ROOT / ".git").exists(): return
+    if os.getenv("KIT3_NO_AUTO_GIT") == "1" or not (ROOT / ".git").exists(): return
     configure_git_credentials()
     quiet = hidden_subprocess_kwargs()
     if subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, text=True, capture_output=True, **quiet).stdout: return
@@ -110,34 +85,19 @@ def pull_before_read():
 
 def config():
     if not LOCAL.exists():
-        raise SystemExit("Configuração local ausente. Execute: python3 euro.py configurar")
+        raise SystemExit("Configuração local ausente. Execute: python3 euro.py iniciar-escritorio")
     return load(LOCAL), load(SHARED)
 
-def local_roles(local):
-    return set(local.get("papeis") or [local.get("papel")])
-
-def require_role(expected):
-    local, shared = config()
-    if expected not in local_roles(local):
-        raise SystemExit(f"Ação exclusiva de {expected}; papel local: {', '.join(sorted(local_roles(local)))}")
-    return local, shared
-
 def print_daily_card(local):
-    papeis = local_roles(local)
     print("\nCOMO COMEÇAR UMA NOVA CONVERSA NO CLAUDE:")
-    if "controller" in papeis:
-        print('/controller-fila Mostre a situação atual da fila e o que depende de mim.')
-        if INBOX_STATE.exists():
-            inbox = load(INBOX_STATE)
-            novas = sum(1 for item in inbox.get("intimacoes", {}).values()
-                        if not item.get("importada_em") and item.get("nova", False))
-            if novas:
-                print(f"CAIXA DE ENTRADA: {novas} intimação(ões) nova(s) aguardando triagem.")
-    if "advogado" in papeis:
-        print('/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.')
-    if papeis == {"dono"}:
-        print("Use /configurar-kit3 quando precisar incluir pessoas ou alterar a configuração do escritório.")
-    print("Não reinstale o Kit e não informe novamente escritório, código de entrada ou chave do Sync.")
+    print('/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.')
+    if INBOX_STATE.exists():
+        inbox = load(INBOX_STATE)
+        novas = sum(1 for item in inbox.get("intimacoes", {}).values()
+                    if not item.get("importada_em") and item.get("nova", False))
+        if novas:
+            print(f"CAIXA DE ENTRADA: {novas} intimação(ões) nova(s) aguardando triagem.")
+    print("Não reinstale o Kit e não informe novamente o nome do escritório ou a chave do Sync.")
 
 def task_path(task_id):
     path = ROOT / "fila" / f"{task_id}.json"
@@ -157,67 +117,30 @@ def transition(data, target):
         raise SystemExit(f"Transição inválida: {current} → {target}")
     data["status"] = target
 
-def cmd_configure(a):
-    if a.papel not in VALID_ROLES or a.agente not in VALID_AGENTS:
-        raise SystemExit("Papel ou agente inválido.")
-    shared = load(SHARED)
-    org = shared.get("organizacao") or {}
-    if a.papel == "controller" and org.get("controllers") and a.nome not in org["controllers"]:
-        raise SystemExit("Somente o Dono pode nomear Controllers por código de entrada.")
-    data = {"schema_version": 1, "colaborador": a.nome, "papel": a.papel, "papeis": [a.papel],
-            "agente": a.agente, "repositorio_privado_confirmado": a.repositorio_privado_confirmado,
-            "sincronizacao_automatica": True, "organizacao_id": org.get("id"),
-            "configurado_em": now()}
-    save(LOCAL, data)
-    if shared["nome_escritorio"] == "CONFIGURE-ME" and a.escritorio:
-        shared["nome_escritorio"] = a.escritorio
-        save(SHARED, shared)
-    print("OK — configuração local salva fora do Git; modo compartilhado:", shared["modo"])
-
 def cmd_start_office(a):
     shared = load(SHARED)
     org = shared.get("organizacao") or {}
     if org.get("id") and org.get("dono") != a.nome:
         raise SystemExit("Este escritório já tem um Dono/Administrador registrado.")
     if not org.get("id"):
+        import uuid
         shared["nome_escritorio"] = a.escritorio
         shared["organizacao"] = {"id": str(uuid.uuid4()), "dono": a.nome,
-                                 "controllers": [a.nome] if a.tambem_controller else [],
                                  "repositorio": a.repositorio or repo_url(), "criada_em": now()}
         if not shared["organizacao"]["repositorio"]: raise SystemExit("Repositório privado não identificado.")
         save(SHARED, shared)
     previous = load(LOCAL) if LOCAL.exists() else {}
-    papeis = ["dono"] + (["controller"] if a.tambem_controller else [])
-    local = {"schema_version": 1, "colaborador": a.nome, "papel": "dono", "papeis": papeis, "agente": a.agente,
-             "repositorio_privado_confirmado": True, "sincronizacao_automatica": True,
+    local = {"schema_version": 1, "colaborador": a.nome, "papeis": ["dono", "controller", "advogado"],
+             "agente": a.agente, "repositorio_privado_confirmado": True, "sincronizacao_automatica": True,
              "organizacao_id": shared["organizacao"]["id"],
              "raizes_entrada": previous.get("raizes_entrada", {}), "configurado_em": now()}
     save(LOCAL, local)
-    auto_git([str(SHARED.relative_to(ROOT))], "config: iniciar escritório e congelar Dono")
-    print("OK — escritório criado. Dono/Administrador:", a.nome)
-    print("PAPÉIS LOCAIS:", ", ".join(papeis))
-    print_daily_card(local)
-
-def cmd_join(a):
-    invite = read_invite(a.codigo)
-    shared = load(SHARED); org = shared.get("organizacao") or {}
-    if invite["organizacao_id"] != org.get("id") or invite["escritorio"] != shared.get("nome_escritorio"):
-        raise SystemExit("O código pertence a outro escritório ou a outra cópia do Kit.")
-    papel = invite.get("papel")
-    if papel not in {"controller", "advogado"}:
-        raise SystemExit("O código não contém um papel permitido.")
-    local = {"schema_version": 1, "colaborador": a.nome, "papel": papel, "papeis": [papel], "agente": a.agente,
-             "repositorio_privado_confirmado": True, "sincronizacao_automatica": True,
-             "organizacao_id": org["id"], "raizes_entrada": {}, "configurado_em": now()}
-    save(LOCAL, local)
-    print("OK — entrada concluída no escritório:", shared["nome_escritorio"])
-    print("Papel:", papel.title(), "| Dono/Administrador:", org.get("dono"))
+    auto_git([str(SHARED.relative_to(ROOT))], "config: iniciar escritório")
+    print("OK — escritório criado. Você:", a.nome, "— acumula todos os papéis (sozinho, sem colaborador no Kit).")
     print_daily_card(local)
 
 def cmd_configure_documents(a):
     local, shared = config()
-    if "dono" not in local_roles(local):
-        raise SystemExit("Somente o Dono/Administrador define o padrão documental do escritório.")
     shared["producao_documental"] = {
         "modelo_obrigatorio": True,
         "onde_ficam_modelos": a.onde_modelos,
@@ -236,20 +159,8 @@ def cmd_configure_documents(a):
         local.setdefault("producao_documental_local", {})["caminho_clientes"] = a.caminho_local_clientes
     save(LOCAL, local)
     auto_git([str(SHARED.relative_to(ROOT))], "config: registrar padrão documental do escritório")
-    print("OK — padrão documental compartilhado registrado.")
+    print("OK — padrão documental registrado.")
     print("OK — caminhos desta máquina ficaram somente na configuração local, fora do Git.")
-
-def cmd_invite(a):
-    _local, shared = require_role("dono")
-    if not (shared.get("organizacao") or {}).get("id"):
-        raise SystemExit("O escritório ainda não foi iniciado pelo novo fluxo.")
-    print(make_invite(shared, a.papel))
-
-def cmd_decode_invite(a):
-    invite = read_invite(a.codigo)
-    print("ESCRITÓRIO:", invite["escritorio"])
-    print("REPOSITÓRIO PRIVADO:", invite["repositorio"])
-    print("PAPEL:", invite["papel"])
 
 def cmd_diagnose(_a):
     checks = []
@@ -260,14 +171,14 @@ def cmd_diagnose(_a):
         checks += [
             (shared.get("modo") == "mvp", "modo MVP ativo"),
             (shared.get("gates", {}).get("protocolo_manual") is True, "protocolo continua manual"),
-            (local_roles(local).issubset(VALID_ROLES) and bool(local_roles(local)), "papel local válido"),
+            (set(local.get("papeis") or []) == {"dono", "controller", "advogado"}, "papéis completos, uma pessoa só"),
             (local.get("agente") in VALID_AGENTS, "agente local válido"),
-            (local.get("repositorio_privado_confirmado") is True, "repositório operacional privado confirmado"),
+            (local.get("repositorio_privado_confirmado") is True, "repositório privado confirmado"),
             (shared.get("conectores", {}).get("sync", {}).get("somente_leitura") is True, "Sync limitado a somente leitura"),
             (shared.get("producao_documental", {}).get("modelo_obrigatorio") is True, "petição exige modelo aprovado"),
-            (shared.get("producao_documental", {}).get("onde_ficam_modelos") not in (None, "", "CONFIGURE-ME"), "localização dos modelos definida pelo Dono"),
-            (shared.get("producao_documental", {}).get("destino_da_copia") not in (None, "", "CONFIGURE-ME"), "destino da cópia definido pelo Dono"),
-            (shared.get("producao_documental", {}).get("padrao_nomes") not in (None, "", "CONFIGURE-ME"), "padrão de nomes definido pelo Dono"),
+            (shared.get("producao_documental", {}).get("onde_ficam_modelos") not in (None, "", "CONFIGURE-ME"), "localização dos modelos definida"),
+            (shared.get("producao_documental", {}).get("destino_da_copia") not in (None, "", "CONFIGURE-ME"), "destino da cópia definido"),
+            (shared.get("producao_documental", {}).get("padrao_nomes") not in (None, "", "CONFIGURE-ME"), "padrão de nomes definido"),
         ]
     except (SystemExit, KeyError, json.JSONDecodeError):
         pass
@@ -284,14 +195,14 @@ def slug(value):
     return value or "tarefa"
 
 def cmd_create(a):
-    local, shared = require_role("controller")
+    local, shared = config()
     if local.get("repositorio_privado_confirmado") is not True:
         raise SystemExit("BLOQUEADO: crie/conecte e confirme o repositório privado antes de registrar tarefas.")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     task_id = f"{stamp}-{slug(a.referencia)}"
     data = {"schema_version": 1, "id": task_id, "status": "aberta", "modo": shared["modo"],
             "cnj": a.cnj, "referencia_entrada": a.referencia, "fonte": "sync",
-            "providencia_sugerida": a.providencia, "responsavel": a.responsavel,
+            "providencia_sugerida": a.providencia, "responsavel": local["colaborador"],
             "criada_por": local["colaborador"], "criada_em": now(), "entrega": None,
             "revisao": None, "historico": []}
     event(data, "criada", local["colaborador"], "Providência é sugestão sujeita à revisão humana.")
@@ -344,7 +255,7 @@ def atualizar_inbox_intimacoes(local, cliente=None, somente_se_dia_novo=False, h
     return inbox, novas, True
 
 def cmd_check_intimations(a):
-    local, _shared = require_role("controller")
+    local, _shared = config()
     try:
         inbox, novas, consultou = atualizar_inbox_intimacoes(
             local, somente_se_dia_novo=a.somente_se_dia_novo)
@@ -366,7 +277,7 @@ def cmd_check_intimations(a):
     print("Nenhuma intimação foi marcada como tratada e nenhuma tarefa foi criada automaticamente.")
 
 def cmd_import_intimation(a):
-    local, shared = require_role("controller")
+    local, shared = config()
     if not INBOX_STATE.exists():
         raise SystemExit("Caixa de entrada ausente. Consulte as intimações antes de importar.")
     inbox = load(INBOX_STATE)
@@ -392,7 +303,7 @@ def cmd_import_intimation(a):
     data = {"schema_version": 1, "id": task_id, "status": "aberta", "modo": shared["modo"],
             "cnj": cnj, "referencia_entrada": f"Intimação Sync {chave}", "fonte": "sync",
             "intimacao_sync_id": item["id"], "data_fatal_sync_nao_confirmada": item.get("data_fatal_sync"),
-            "providencia_sugerida": a.providencia, "responsavel": a.responsavel,
+            "providencia_sugerida": a.providencia, "responsavel": local["colaborador"],
             "criada_por": local["colaborador"], "criada_em": now(), "entrega": None,
             "revisao": None, "historico": []}
     event(data, "criada_de_intimacao", local["colaborador"],
@@ -401,44 +312,37 @@ def cmd_import_intimation(a):
     item.update({"tarefa_id": task_id, "importada_em": now(), "nova": False})
     save(INBOX_STATE, inbox)
     auto_git([f"fila/{task_id}.json"], f"fila: importar intimação Sync {chave}")
-    print("OK — tarefa criada após confirmação do Controller:", task_id)
+    print("OK — tarefa criada após confirmação:", task_id)
     print("OK — nenhuma alteração foi feita no Sync; protocolo continua manual.")
 
 def cmd_assign(a):
-    local, _ = require_role("controller")
+    local, _ = config()
     data = task(a.id)
     if data["status"] != "aberta":
-        raise SystemExit("Só é possível atribuir responsável a tarefas ainda abertas.")
-    data["responsavel"] = a.responsavel
+        raise SystemExit("Só é possível preparar automação em tarefas ainda abertas.")
     if a.providencia:
         data["providencia_sugerida"] = a.providencia
     if a.automatizar:
         data["automatizar"] = True
-    event(data, "atribuida", local["colaborador"], a.responsavel)
+    event(data, "providencia_atualizada", local["colaborador"], a.providencia or "")
     save(task_path(a.id), data)
-    auto_git([f"fila/{a.id}.json"], f"fila: atribuir {a.id}")
-    print("OK — responsável definido:", a.responsavel)
-
-def visible(data, local):
-    return "controller" in local_roles(local) or not data.get("responsavel") or data.get("responsavel") == local["colaborador"] or data.get("advogado") == local["colaborador"]
+    auto_git([f"fila/{a.id}.json"], f"fila: providência {a.id}")
+    print("OK — providência registrada.")
 
 def cmd_list(a):
     pull_before_read()
-    local, _ = config()
     rows = []
     for p in sorted((ROOT / "fila").glob("*.json")):
         data = load(p)
-        if visible(data, local) and (not a.status or data["status"] == a.status):
-            rows.append((data["id"], data["status"], data.get("responsavel") or "livre", data["cnj"]))
+        if not a.status or data["status"] == a.status:
+            rows.append((data["id"], data["status"], data.get("responsavel") or "—", data["cnj"]))
     print("ID | STATUS | RESPONSÁVEL | CNJ")
     for row in rows:
         print(" | ".join(row))
 
 def cmd_claim(a):
-    local, _ = require_role("advogado")
+    local, _ = config()
     data = task(a.id)
-    if data.get("responsavel") and data["responsavel"] != local["colaborador"]:
-        raise SystemExit("Tarefa destinada a outro colaborador.")
     transition(data, "em_execucao")
     data["advogado"] = local["colaborador"]
     event(data, "assumida", local["colaborador"])
@@ -447,14 +351,14 @@ def cmd_claim(a):
     print("OK — tarefa assumida:", a.id)
 
 def resolve_context(data, local):
-    destino = ROOT / ".metodo-euro-contextos" / data["id"] / "entrada"
+    destino = ROOT / ".contextos-autos" / data["id"] / "entrada"
     try:
         return sync_connector.materializar_entrada(data["cnj"], destino, local["organizacao_id"])
     except RuntimeError as exc:
         raise SystemExit(f"Não foi possível preparar os autos pelo Sync: {exc}")
 
 def cmd_context(a):
-    local, _ = require_role("advogado")
+    local, _ = config()
     data = task(a.id)
     if data.get("advogado") != local["colaborador"]:
         raise SystemExit("Assuma a tarefa antes de abrir o contexto.")
@@ -462,10 +366,10 @@ def cmd_context(a):
     print("ENTRADA AUTORIZADA:", path)
 
 def cmd_submit(a):
-    local, _ = require_role("advogado")
+    local, _ = config()
     data = task(a.id)
     if data.get("advogado") != local["colaborador"]:
-        raise SystemExit("Tarefa não pertence a este Advogado.")
+        raise SystemExit("Assuma a tarefa antes de entregar.")
     source = Path(a.arquivo).expanduser().resolve()
     if not source.is_file():
         raise SystemExit("Arquivo de entrega não encontrado.")
@@ -487,7 +391,7 @@ def cmd_submit(a):
     print("OK — entrega registrada; protocolo não executado. SHA256:", digest)
 
 def cmd_review(a):
-    local, _ = require_role("controller")
+    local, _ = config()
     data = task(a.id)
     target = {"aprovada": "aprovada", "ajustes": "ajustes", "reprovada": "reprovada"}[a.decisao]
     transition(data, target)
@@ -498,10 +402,10 @@ def cmd_review(a):
     print("OK — revisão registrada; aprovação não equivale a protocolo.")
 
 def cmd_reopen(a):
-    local, _ = require_role("advogado")
+    local, _ = config()
     data = task(a.id)
     if data.get("advogado") != local["colaborador"]:
-        raise SystemExit("Tarefa não pertence a este Advogado.")
+        raise SystemExit("Assuma a tarefa antes de reabrir os ajustes.")
     transition(data, "em_execucao")
     event(data, "ajustes_iniciados", local["colaborador"])
     save(task_path(a.id), data)
@@ -527,7 +431,7 @@ def cmd_propose(a):
     print("OK — proposta criada:", target.relative_to(ROOT))
 
 def cmd_promote(a):
-    local, _ = require_role("controller")
+    local, _ = config()
     proposal = ROOT / "propostas" / a.proposta
     if not proposal.is_file() or proposal.suffix != ".md":
         raise SystemExit("Proposta não encontrada.")
@@ -578,7 +482,7 @@ def link_skill(source, target):
         if junction.returncode == 0:
             return "ligada por junction"
         shutil.copytree(source, target)
-        (target / ".metodo-euro-copia-gerenciada").write_text(str(source), encoding="utf-8")
+        (target / ".copia-gerenciada").write_text(str(source), encoding="utf-8")
         return "copiada de forma gerenciada (junction indisponível)"
     target.symlink_to(source, target_is_directory=True)
     return "ligada"
@@ -596,7 +500,7 @@ def cmd_install_skills(a):
         print("OK —", status, ":", target)
 
 def cmd_prepare_auto_sync(_a):
-    runtime = ROOT / ".metodo-euro-runtime"
+    runtime = ROOT / ".esteira-runtime"
     runtime.mkdir(exist_ok=True)
     runner = runtime / "auto-sync.py"
     runner.write_text("""#!/usr/bin/env python3
@@ -647,14 +551,14 @@ raise SystemExit(push.returncode)
         if pythonw.exists():
             python = pythonw
         task = runtime / "INSTALAR-TAREFA-WINDOWS.ps1"
-        task.write_text(f'''$Action = New-ScheduledTaskAction -Execute "{python}" -Argument '"{runner}"'\n$TriggerRepeticao = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 10)\n$TriggerEntrada = New-ScheduledTaskTrigger -AtLogOn\nRegister-ScheduledTask -TaskName "MetodoEuroAutoSync" -Action $Action -Trigger @($TriggerRepeticao, $TriggerEntrada) -Description "Sincroniza o repositorio privado e consulta a caixa do Sync em leitura" -Force\n''', encoding="utf-8")
+        task.write_text(f'''$Action = New-ScheduledTaskAction -Execute "{python}" -Argument '"{runner}"'\n$TriggerRepeticao = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 10)\n$TriggerEntrada = New-ScheduledTaskTrigger -AtLogOn\nRegister-ScheduledTask -TaskName "Kit3AutoSync" -Action $Action -Trigger @($TriggerRepeticao, $TriggerEntrada) -Description "Sincroniza o repositorio privado e consulta a caixa do Sync em leitura" -Force\n''', encoding="utf-8")
         print("OK — execute internamente e valide a tarefa:", task)
     else:
-        plist = runtime / "com.metodoeuro.autosync.plist"
+        plist = runtime / "com.marcuspeterson.kit3.autosync.plist"
         plist.write_text(f'''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>Label</key><string>com.metodoeuro.autosync</string>
+<key>Label</key><string>com.marcuspeterson.kit3.autosync</string>
 <key>ProgramArguments</key><array><string>{python}</string><string>{runner}</string></array>
 <key>StartInterval</key><integer>600</integer>
 <key>RunAtLoad</key><true/>
@@ -664,8 +568,8 @@ raise SystemExit(push.returncode)
 
 def _pedir_chave_sync():
     """Recebe o segredo sem colocá-lo em argumento, Git ou texto da conversa."""
-    if os.getenv("METODO_EURO_SYNC_KEY"):
-        return os.environ["METODO_EURO_SYNC_KEY"]
+    if os.getenv("KIT3_SYNC_KEY"):
+        return os.environ["KIT3_SYNC_KEY"]
     if platform.system() == "Darwin":
         script = 'display dialog "Cole a chave do Sync" default answer "" with hidden answer buttons {"Cancelar", "Salvar"} default button "Salvar"\ntext returned of result'
         result = subprocess.run(["osascript", "-e", script], text=True, capture_output=True)
@@ -712,20 +616,16 @@ def cmd_test_sync(_a):
     print("OK — leitura do Sync autorizada para:", conta.get("conta") or "conta identificada")
 
 def parser():
-    p = argparse.ArgumentParser(description="Kit 3 Método Euro — fila jurídica segura")
+    p = argparse.ArgumentParser(description="Kit 3 — Esteira de Petições operada por uma pessoa só")
     sub = p.add_subparsers(dest="cmd", required=True)
-    q = sub.add_parser("iniciar-escritorio"); q.add_argument("--nome", required=True); q.add_argument("--escritorio", required=True); q.add_argument("--agente", choices=sorted(VALID_AGENTS), default="claude"); q.add_argument("--repositorio", default=""); q.add_argument("--tambem-controller", action="store_true"); q.set_defaults(fn=cmd_start_office)
-    q = sub.add_parser("entrar-com-codigo"); q.add_argument("codigo"); q.add_argument("--nome", required=True); q.add_argument("--agente", choices=sorted(VALID_AGENTS), default="claude"); q.set_defaults(fn=cmd_join)
+    q = sub.add_parser("iniciar-escritorio"); q.add_argument("--nome", required=True); q.add_argument("--escritorio", required=True); q.add_argument("--agente", choices=sorted(VALID_AGENTS), default="claude"); q.add_argument("--repositorio", default=""); q.set_defaults(fn=cmd_start_office)
     q = sub.add_parser("configurar-documentos"); q.add_argument("--onde-modelos", required=True); q.add_argument("--pastas-clientes", choices=["sim", "nao"], required=True); q.add_argument("--destino-copia", required=True); q.add_argument("--padrao-nomes", required=True); q.add_argument("--caminho-local-modelos", default=""); q.add_argument("--caminho-local-clientes", default=""); q.set_defaults(fn=cmd_configure_documents)
-    q = sub.add_parser("gerar-codigo"); q.add_argument("--papel", choices=["advogado", "controller"], required=True); q.set_defaults(fn=cmd_invite)
-    q = sub.add_parser("decodificar-codigo"); q.add_argument("codigo"); q.set_defaults(fn=cmd_decode_invite)
-    q = sub.add_parser("configurar"); q.add_argument("--nome", required=True); q.add_argument("--escritorio", required=True); q.add_argument("--papel", choices=sorted(VALID_ROLES), required=True); q.add_argument("--agente", choices=sorted(VALID_AGENTS), required=True); q.add_argument("--repositorio-privado-confirmado", action="store_true", help="Use somente após verificar no GitHub que o repositório operacional é privado."); q.set_defaults(fn=cmd_configure)
     q = sub.add_parser("diagnosticar"); q.set_defaults(fn=cmd_diagnose)
-    q = sub.add_parser("criar-tarefa"); q.add_argument("--cnj", required=True); q.add_argument("--referencia", required=True); q.add_argument("--providencia", required=True); q.add_argument("--responsavel", default=""); q.set_defaults(fn=cmd_create)
+    q = sub.add_parser("criar-tarefa"); q.add_argument("--cnj", required=True); q.add_argument("--referencia", required=True); q.add_argument("--providencia", required=True); q.set_defaults(fn=cmd_create)
     q = sub.add_parser("checar-intimacoes"); q.add_argument("--somente-se-dia-novo", action="store_true"); q.add_argument("--silencioso", action="store_true"); q.set_defaults(fn=cmd_check_intimations)
-    q = sub.add_parser("importar-intimacao"); q.add_argument("id_sync", type=int); q.add_argument("--providencia", required=True); q.add_argument("--responsavel", default=""); q.set_defaults(fn=cmd_import_intimation)
+    q = sub.add_parser("importar-intimacao"); q.add_argument("id_sync", type=int); q.add_argument("--providencia", required=True); q.set_defaults(fn=cmd_import_intimation)
     q = sub.add_parser("listar"); q.add_argument("--status"); q.set_defaults(fn=cmd_list)
-    q = sub.add_parser("atribuir"); q.add_argument("id"); q.add_argument("--responsavel", required=True); q.add_argument("--providencia", default=""); q.add_argument("--automatizar", action="store_true"); q.set_defaults(fn=cmd_assign)
+    q = sub.add_parser("atribuir"); q.add_argument("id"); q.add_argument("--providencia", default=""); q.add_argument("--automatizar", action="store_true"); q.set_defaults(fn=cmd_assign)
     q = sub.add_parser("assumir"); q.add_argument("id"); q.set_defaults(fn=cmd_claim)
     q = sub.add_parser("contexto"); q.add_argument("id"); q.set_defaults(fn=cmd_context)
     q = sub.add_parser("entregar"); q.add_argument("id"); q.add_argument("arquivo"); q.add_argument("--modelo", required=True); q.add_argument("--copia-destino", required=True); q.set_defaults(fn=cmd_submit)

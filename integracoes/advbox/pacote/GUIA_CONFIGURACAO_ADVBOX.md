@@ -22,9 +22,9 @@ Rode novamente `instalar.py --verify-only`. O resultado deve apresentar os oito 
 
 No Flowter, crie três fluxos conforme o manifesto:
 
-1. `Método Euro - Produção e revisão`: validar entrada → produzir minuta → revisar minuta.
-2. `Método Euro - Refação`: refazer minuta → revisar minuta.
-3. `Método Euro - Protocolo manual`: aprovada → protocolar manualmente → confirmar protocolo.
+1. `Kit 3 - Produção e revisão`: validar entrada → produzir minuta → revisar minuta.
+2. `Kit 3 - Refação`: refazer minuta → revisar minuta.
+3. `Kit 3 - Protocolo manual`: aprovada → protocolar manualmente → confirmar protocolo.
 
 Na versão Workflow, monte as mesmas sequências em `Configurações → Workflow`. Defina responsáveis e
 prazos com o Dono, uma pergunta por vez. Não marque automaticamente protocolo como concluído.
@@ -35,7 +35,7 @@ imagem entra no resultado local; a imagem não entra no Git.
 ## Checkpoint 4 — teste controlado
 
 Escolha com o Dono um processo/caso autorizado para teste e um usuário responsável. Execute o teste
-com os dois IDs. O instalador cria `[EURO] VALIDAR ENTRADA`, relê por ID e deixa a conclusão manual.
+com os dois IDs. O instalador cria `[KIT3] VALIDAR ENTRADA`, relê por ID e deixa a conclusão manual.
 Não use prazo fatal, não anexe documento real e não exclua tarefa para “limpar” o teste.
 
 ## Como o Claude opera depois

@@ -6,8 +6,8 @@ import sys
 from pathlib import Path
 
 root = Path(__file__).parents[1]
-required = ["README.md", "AGENTS.md", "CLAUDE.md", "euro.py", "metodo-euro.json",
-            "skills/configurar-kit3/SKILL.md", "skills/controller-fila/SKILL.md",
+required = ["README.md", "AGENTS.md", "CLAUDE.md", "euro.py", "escritorio.json",
+            "skills/configurar-kit3/SKILL.md",
             "skills/executar-tarefa/SKILL.md", "skills/revisar-entrega/SKILL.md",
             "skills/evoluir-skill/SKILL.md", "skills/resumo-do-processo/SKILL.md",
             "skills/gerar-peticao-por-modelo/SKILL.md", "skills/atualizar-kit/SKILL.md",
@@ -26,10 +26,10 @@ required = ["README.md", "AGENTS.md", "CLAUDE.md", "euro.py", "metodo-euro.json"
 missing = [p for p in required if not (root / p).is_file()]
 if missing:
     raise SystemExit("Arquivos ausentes: " + ", ".join(missing))
-cfg = json.loads((root / "metodo-euro.json").read_text())
+cfg = json.loads((root / "escritorio.json").read_text())
 assert cfg["modo"] == "mvp"
 assert cfg["conectores"]["sync"]["somente_leitura"] is True
-assert cfg["conectores"]["sync"]["obrigatorio_metodo_euro"] is True
+assert cfg["conectores"]["sync"]["obrigatorio"] is True
 assert cfg["fonte_autos"] == "sync"
 assert cfg["conectores"]["infinitum"]["habilitado"] is False
 assert cfg["conectores"]["meu_estagiario"]["habilitado"] is False
@@ -48,6 +48,9 @@ for suite in ("integracoes/meu-estagiario/pacote/tests", "integracoes/advbox/pac
     result = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", suite, "-v"], cwd=root)
     if result.returncode:
         raise SystemExit(result.returncode)
+result = subprocess.run([sys.executable, "tests/integration_single_office.py"], cwd=root)
+if result.returncode:
+    raise SystemExit(result.returncode)
 for directory, archive in (
     ("integracoes/meu-estagiario", "Instalador-Esteira-Peticoes-Meu-Estagiario-v1.0.0.zip"),
     ("integracoes/advbox", "Instalador-Esteira-Peticoes-ADVBOX-v1.1.0-preview.zip"),

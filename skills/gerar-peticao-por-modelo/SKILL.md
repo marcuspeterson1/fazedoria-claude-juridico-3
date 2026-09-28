@@ -6,7 +6,7 @@ description: Gera uma petição a partir de uma cópia de modelo aprovado do esc
 # Gerar petição por modelo
 
 Nunca comece uma petição em documento vazio. Antes de redigir, leia `producao_documental` em
-`metodo-euro.json` e localize um modelo aprovado adequado, esteja ele no Google Drive, OneDrive,
+`escritorio.json` e localize um modelo aprovado adequado, esteja ele no Google Drive, OneDrive,
 disco local, rede ou outro armazenamento autorizado. Use os caminhos locais apenas a partir da
 configuração local ignorada pelo Git.
 

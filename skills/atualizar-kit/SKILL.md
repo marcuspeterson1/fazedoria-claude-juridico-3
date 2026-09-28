@@ -11,26 +11,26 @@ instalação em um Kit já configurado. Antes de agir, leia `versao-kit.json` e
 
 ## Regra central
 
-Instalação existente não é reinstalação. Não recrie repositório, organização, Dono, códigos, clone,
-fila, entregas, propostas, credenciais, caminhos locais ou agendamentos. Não peça novamente dados já
+Instalação existente não é reinstalação. Não recrie repositório, organização, Dono, clone, fila,
+entregas, propostas, credenciais, caminhos locais ou agendamentos. Não peça novamente dados já
 registrados. Compare versões e hashes e aplique apenas arquivos oficiais novos ou alterados.
 
 Os caminhos listados como `preservar_sempre` no manifesto pertencem ao escritório. Nunca os
-substitua pela cópia pública. Para `metodo-euro.json`, preserve identidade, organização e configuração
+substitua pela cópia pública. Para `escritorio.json`, preserve identidade, organização e configuração
 documental preenchida; acrescente somente chaves novas ausentes. Skills criadas pelo escritório não
 são apagadas. Se uma skill oficial tiver sido personalizada, preserve as duas versões e peça ao Dono
 para conciliar; não escolha silenciosamente.
 
 Antes de aplicar, crie um ponto de restauração Git. Depois, instale novamente os links de skills de
 forma idempotente. Quando a versão alterar `euro.py` ou o mecanismo oficial de agendamento, execute
-novamente `preparar-auto-sync` e atualize a tarefa de nome estável `MetodoEuroAutoSync` ou o
-LaunchAgent `com.metodoeuro.autosync`; isso substitui somente os arquivos gerenciados do runner e não
+novamente `preparar-auto-sync` e atualize a tarefa de nome estável `Kit3AutoSync` ou o
+LaunchAgent `com.marcuspeterson.kit3.autosync`; isso substitui somente os arquivos gerenciados do runner e não
 cria um segundo agendamento. Comprove uma execução. Depois, rode os testes e `diagnosticar`, registre
 a versão instalada na configuração local e sincronize o repositório privado. Mostre em checkpoint:
 versão anterior e nova, arquivos incluídos, alterados, preservados e conflitos. Se já estiver
 atualizado, não modifique nada.
 
-Em escritório com vários computadores, o Dono integra a atualização oficial no repositório privado.
-Colaboradores recebem essa versão pela sincronização normal; não devem publicar concorrentemente a
-mesma atualização. Se o remoto avançar durante a atualização, pare, preserve ambos os estados e mostre
-o conflito ao Dono — nunca escolha ou sobrescreva silenciosamente a versão de outra pessoa.
+Se você usa mais de um computador com a mesma identidade, integre a atualização oficial em um deles
+e deixe o outro receber pela sincronização normal; não rode a mesma atualização nos dois ao mesmo
+tempo. Se o remoto avançar durante a atualização, pare, preserve ambos os estados e mostre o conflito
+— nunca escolha ou sobrescreva silenciosamente uma das duas versões.

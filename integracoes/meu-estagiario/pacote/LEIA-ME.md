@@ -36,11 +36,12 @@ pessoa responsável, preserva a tarefa sem esse vínculo e relata a lacuna.
 ## Motor — fecha o ciclo pelo próprio Meu Estagiário (opcional, avançado)
 
 Sem o motor, o espelhamento é sempre manual (`ponte.py` chamado à mão). Com o motor instalado, o
-ciclo fecha sozinho, agendado, direto no Meu Estagiário: o Controller responde a um card espelhado
-com uma **nota** contendo `Responsável: <nome exato>` (e opcionalmente `Providência: ...`); o motor
-lê essa nota, atribui a tarefa na fila do Kit e, na máquina do Advogado correspondente, dispara
-headless a mesma skill que um humano rodaria (`/resumo-do-processo` + `/gerar-peticao-por-modelo`) e
-devolve o link da minuta como nota na mesma tarefa. Nada disso protocola nem pula a revisão humana.
+ciclo fecha sozinho, agendado, direto no Meu Estagiário: você responde a um card espelhado com uma
+**nota** dizendo o que fazer; o motor lê essa nota, registra a providência na fila do Kit e, na
+mesma passada, dispara headless a mesma skill que você rodaria (`/resumo-do-processo` +
+`/gerar-peticao-por-modelo`), devolvendo o link da minuta como nota na mesma tarefa. Como o Kit 3 é
+de uma pessoa só, não existe "atribuir a outra pessoa" — a nota já é a ordem de partida. Nada disso
+protocola nem pula a revisão humana.
 
 ```bash
 python3 motor.py ciclo --kit-root /caminho/do/clone           # uma passada manual, pra testar

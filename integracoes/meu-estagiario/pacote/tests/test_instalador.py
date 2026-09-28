@@ -54,7 +54,7 @@ class InstallerTests(unittest.TestCase):
         api = FakeAPI(); data = instalar.audit(api)
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            (root / ".metodo-euro.local.json").write_text(json.dumps({"repositorio_privado_confirmado": True}))
+            (root / ".escritorio.local.json").write_text(json.dumps({"repositorio_privado_confirmado": True}))
             path = instalar.configure_kit(root, data)
             text = path.read_text()
             self.assertIn("MEU_ESTAGIARIO_API_KEY", text)

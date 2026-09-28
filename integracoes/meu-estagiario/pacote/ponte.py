@@ -43,7 +43,7 @@ def exact_case(api: API, cnj: str) -> str | None:
 
 
 def marker(task_id: str) -> str:
-    return f"[METODO_EURO_ID:{task_id}]"
+    return f"[KIT3_TAREFA:{task_id}]"
 
 
 def find_existing(api: API, task_id: str) -> dict[str, Any] | None:

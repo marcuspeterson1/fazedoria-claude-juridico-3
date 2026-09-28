@@ -15,7 +15,7 @@
     "preservar_topicos_aplicaveis": true
   },
   "conectores": {
-    "sync": {"habilitado": true, "obrigatorio_metodo_euro": true, "somente_leitura": true},
+    "sync": {"habilitado": true, "obrigatorio": true, "somente_leitura": true},
     "infinitum": {"habilitado": false},
     "meu_estagiario": {"habilitado": false, "modo": "espelho_operacional"},
     "advbox": {"habilitado": false, "modo": "advbox_operacional"}
@@ -23,6 +23,6 @@
   "gates": {
     "revisao_humana": true,
     "protocolo_manual": true,
-    "promocao_skill_por_controller": true
+    "promocao_skill_apos_revisao": true
   }
 }

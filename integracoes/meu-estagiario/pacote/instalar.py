@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Instalador público e idempotente do Meu Estagiário no Kit Método Euro."""
+"""Instalador público e idempotente do Meu Estagiário no Kit 3."""
 from __future__ import annotations
 
 import argparse
@@ -62,7 +62,7 @@ class API:
         url = self.base + path
         req = urllib.request.Request(url, data=data, method=method, headers={
             "Authorization": "Bear" + f"er {self.token}", "Accept": "application/json",
-            "Content-Type": "application/json", "User-Agent": "Metodo-Euro-ME-Installer/1.0",
+            "Content-Type": "application/json", "User-Agent": "Kit3-ME-Installer/1.0",
         })
         try:
             with urllib.request.urlopen(req, timeout=self.timeout, context=ssl_context()) as res:
@@ -83,7 +83,7 @@ class API:
             os.chmod(header.name, 0o600)
             header.write("Authorization: Bear" + f"er {self.token}\nAccept: application/json\nContent-Type: application/json\n")
             header.close()
-            cmd = ["curl", "-sS", "--fail-with-body", "-A", "Metodo-Euro-ME-Installer/1.0",
+            cmd = ["curl", "-sS", "--fail-with-body", "-A", "Kit3-ME-Installer/1.0",
                    "-X", method, "-H", f"@{header.name}", "--max-time", str(self.timeout)]
             if body is not None:
                 payload = tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8")
@@ -150,7 +150,7 @@ def audit(api: API, write: bool = False) -> dict[str, Any]:
 
 
 def configure_kit(kit_root: Path, audit_data: dict[str, Any]) -> Path:
-    local_path = kit_root / ".metodo-euro.local.json"
+    local_path = kit_root / ".escritorio.local.json"
     if not local_path.is_file():
         raise InstallError("A configuração local do Kit não existe; instale primeiro o núcleo do Kit 3.")
     local = json.loads(local_path.read_text(encoding="utf-8"))
@@ -171,9 +171,9 @@ def configure_kit(kit_root: Path, audit_data: dict[str, Any]) -> Path:
 
 
 def synthetic_test(api: API) -> dict[str, Any]:
-    marker = f"METODO_EURO_TESTE:{uuid.uuid4()}"
+    marker = f"KIT3_TESTE:{uuid.uuid4()}"
     created = api.post("/tarefas", {
-        "titulo": "[TESTE MÉTODO EURO] Integração",
+        "titulo": "[TESTE KIT3] Integração",
         "descricao": f"Registro sintético, sem dados reais. [{marker}]",
     }).get("tarefa", {})
     task_id = created.get("id")
@@ -217,7 +217,7 @@ def main() -> int:
     config_path = None if args.verify_only else configure_kit(args.kit_root.resolve(), data)
     test = synthetic_test(api) if args.test_write else None
     result = public_result(data, config_path, test)
-    output = args.output or args.kit_root.resolve() / ".metodo-euro-runtime/integracoes/meu-estagiario/resultado_instalacao.json"
+    output = args.output or args.kit_root.resolve() / ".esteira-runtime/integracoes/meu-estagiario/resultado_instalacao.json"
     atomic_json(output, result)
     print("INSTALAÇÃO APROVADA — Meu Estagiário conectado; protocolo continua manual.")
     print("RESULTADO:", output)

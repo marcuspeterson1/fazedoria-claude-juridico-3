@@ -1,16 +1,16 @@
 # Contrato prévio do worker ADVBOX
 
 ```text
-ADVBOX: [EURO] PRODUZIR MINUTA COM CLAUDE
+ADVBOX: [KIT3] PRODUZIR MINUTA COM CLAUDE
   → identificar processo e CNJ
   → Sync: ler autos completos, somente leitura
   → copiar modelo aprovado
   → gerar minuta e conferir arquivo
-  → ADVBOX: criar [EURO] REVISAR MINUTA com link e marcador
-       ├─ corrigir → [EURO] REFAZER MINUTA COM CLAUDE
-       └─ aprovar → [EURO] APROVADA PARA PROTOCOLO
-                    → [EURO] PROTOCOLAR MANUALMENTE
-                    → [EURO] CONFIRMAR PROTOCOLO
+  → ADVBOX: criar [KIT3] REVISAR MINUTA com link e marcador
+       ├─ corrigir → [KIT3] REFAZER MINUTA COM CLAUDE
+       └─ aprovar → [KIT3] APROVADA PARA PROTOCOLO
+                    → [KIT3] PROTOCOLAR MANUALMENTE
+                    → [KIT3] CONFIRMAR PROTOCOLO
 ```
 
 Cada transição é uma nova tarefa rastreável na ADVBOX. Use `ponte.py`, ID externo idempotente e

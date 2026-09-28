@@ -15,7 +15,7 @@ Antes de agir, confira se o Kit está num clone privado e já configurado. Leia 
 - Meu Estagiário: use o pacote público correspondente, valide os escopos e execute o teste sintético.
   A ponte é idempotente, mas não equivale a um worker contínuo.
 - ADVBOX: assuma que o aluno continuará no sistema. Use o instalador híbrido para auditar a API,
-  criar pela interface os tipos `[EURO]` e os fluxos ausentes e validar com evidência. A ponte pode
+  criar pela interface os tipos `[KIT3]` e os fluxos ausentes e validar com evidência. A ponte pode
   criar tarefas em `/posts`, sempre após simulação, com marcador idempotente e leitura de volta.
   Não altere processos, clientes, movimentações ou financeiro.
 - Infinitum: siga o instalador portátil existente e seus gates.

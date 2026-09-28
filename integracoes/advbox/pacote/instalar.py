@@ -37,7 +37,7 @@ class API:
         url = self.base + path; data = json.dumps(body, ensure_ascii=False).encode() if body is not None else None
         req = urllib.request.Request(url, data=data, method=method, headers={
             "Authorization": "Bear" + f"er {self.token}", "Accept": "application/json",
-            "Content-Type": "application/json", "User-Agent": "Metodo-Euro-ADVBOX-Installer/1.1"})
+            "Content-Type": "application/json", "User-Agent": "Kit3-ADVBOX-Installer/1.1"})
         try:
             try:
                 import certifi  # type: ignore
@@ -57,7 +57,7 @@ class API:
         try:
             os.chmod(header.name, 0o600)
             header.write("Authorization: Bear" + f"er {self.token}\nAccept: application/json\nContent-Type: application/json\n"); header.close()
-            cmd = ["curl", "-sS", "--fail-with-body", "-A", "Metodo-Euro-ADVBOX-Installer/1.1",
+            cmd = ["curl", "-sS", "--fail-with-body", "-A", "Kit3-ADVBOX-Installer/1.1",
                    "-X", method, "-H", f"@{header.name}", "--max-time", str(self.timeout)]
             if body is not None:
                 payload = tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8")
@@ -94,7 +94,7 @@ def evidence(path: Path | None) -> dict[str, Any] | None:
     return {"file": str(path.resolve()), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 def configure_kit(kit_root: Path, data: dict[str, Any], ui_evidence: dict[str, Any]) -> Path:
-    path = kit_root / ".metodo-euro.local.json"
+    path = kit_root / ".escritorio.local.json"
     if not path.is_file(): raise InstallError("Instale primeiro o núcleo do Kit 3 no clone privado.")
     local = json.loads(path.read_text(encoding="utf-8"))
     if local.get("repositorio_privado_confirmado") is not True: raise InstallError("O repositório privado ainda não foi confirmado.")
@@ -107,10 +107,10 @@ def configure_kit(kit_root: Path, data: dict[str, Any], ui_evidence: dict[str, A
 
 def test_task(api: API, data: dict[str, Any], lawsuit_id: str, user_id: str) -> dict[str, Any]:
     task_type = data["task_mapping"].get("entrada")
-    if not task_type: raise InstallError("O tipo [EURO] VALIDAR ENTRADA ainda não existe.")
+    if not task_type: raise InstallError("O tipo [KIT3] VALIDAR ENTRADA ainda não existe.")
     body = {"from": user_id, "guests": [user_id], "tasks_id": task_type, "lawsuits_id": lawsuit_id,
             "start_date": date.today().isoformat(),
-            "comments": "[TESTE MÉTODO EURO] Validar integração; concluir manualmente após conferência."}
+            "comments": "[TESTE KIT3] Validar integração; concluir manualmente após conferência."}
     created = api.post_task(body); task_id = created.get("posts_id")
     if not task_id: raise InstallError("A ADVBOX não devolveu o ID da tarefa de teste.")
     rows = api.get(f"/posts?id={task_id}&limit=2&offset=0").get("data", [])
@@ -138,7 +138,7 @@ def main() -> int:
     status = "acao_na_interface" if data["missing_task_types"] or not ui else "aprovado"; config = None
     if status == "aprovado" and not args.verify_only: config = configure_kit(args.kit_root.resolve(), data, ui)
     test = test_task(api, data, args.test_lawsuit_id, args.test_user_id) if wants_test else None
-    output = args.output or args.kit_root.resolve() / ".metodo-euro-runtime/integracoes/advbox/resultado_instalacao.json"
+    output = args.output or args.kit_root.resolve() / ".esteira-runtime/integracoes/advbox/resultado_instalacao.json"
     atomic_json(output, result(data, status, config, ui, test))
     if status != "aprovado":
         print("AÇÃO GUIADA NECESSÁRIA — configure tarefas e Flowter conforme GUIA_CONFIGURACAO_ADVBOX.md")

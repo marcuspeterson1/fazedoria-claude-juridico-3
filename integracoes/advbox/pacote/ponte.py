@@ -5,7 +5,7 @@ import argparse, json, urllib.parse
 from datetime import date
 from instalar import API, InstallError, MANIFEST, audit, token_from_environment
 
-def marker(external_id: str) -> str: return f"[METODO_EURO_ID:{external_id}]"
+def marker(external_id: str) -> str: return f"[KIT3_TAREFA:{external_id}]"
 
 def existing(api: API, lawsuit_id: str, external_id: str) -> dict | None:
     wanted = marker(external_id); quoted = urllib.parse.quote(lawsuit_id); rows = []

@@ -7,19 +7,19 @@
   "queue_source": "advbox",
   "autos_source": "sync_read_only",
   "task_types": [
-    {"key": "entrada", "name": "[EURO] VALIDAR ENTRADA"},
-    {"key": "produzir", "name": "[EURO] PRODUZIR MINUTA COM CLAUDE"},
-    {"key": "revisar", "name": "[EURO] REVISAR MINUTA"},
-    {"key": "refazer", "name": "[EURO] REFAZER MINUTA COM CLAUDE"},
-    {"key": "aprovar", "name": "[EURO] APROVADA PARA PROTOCOLO"},
-    {"key": "protocolar", "name": "[EURO] PROTOCOLAR MANUALMENTE"},
-    {"key": "confirmar_protocolo", "name": "[EURO] CONFIRMAR PROTOCOLO"},
-    {"key": "bloqueada", "name": "[EURO] BLOQUEADA - DOCUMENTOS FALTANTES"}
+    {"key": "entrada", "name": "[KIT3] VALIDAR ENTRADA"},
+    {"key": "produzir", "name": "[KIT3] PRODUZIR MINUTA COM CLAUDE"},
+    {"key": "revisar", "name": "[KIT3] REVISAR MINUTA"},
+    {"key": "refazer", "name": "[KIT3] REFAZER MINUTA COM CLAUDE"},
+    {"key": "aprovar", "name": "[KIT3] APROVADA PARA PROTOCOLO"},
+    {"key": "protocolar", "name": "[KIT3] PROTOCOLAR MANUALMENTE"},
+    {"key": "confirmar_protocolo", "name": "[KIT3] CONFIRMAR PROTOCOLO"},
+    {"key": "bloqueada", "name": "[KIT3] BLOQUEADA - DOCUMENTOS FALTANTES"}
   ],
   "flowter": [
-    {"name": "Método Euro - Produção e revisão", "sequence": ["entrada", "produzir", "revisar"]},
-    {"name": "Método Euro - Refação", "sequence": ["refazer", "revisar"]},
-    {"name": "Método Euro - Protocolo manual", "sequence": ["aprovar", "protocolar", "confirmar_protocolo"]}
+    {"name": "Kit 3 - Produção e revisão", "sequence": ["entrada", "produzir", "revisar"]},
+    {"name": "Kit 3 - Refação", "sequence": ["refazer", "revisar"]},
+    {"name": "Kit 3 - Protocolo manual", "sequence": ["aprovar", "protocolar", "confirmar_protocolo"]}
   ],
   "gates": {"human_review": true, "manual_filing": true, "no_financial_writes": true}
 }

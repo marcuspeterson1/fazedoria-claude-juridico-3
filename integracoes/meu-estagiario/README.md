@@ -1,6 +1,6 @@
 # Meu Estagiário
 
-O pacote público conecta a fila privada do Método Euro ao quadro do Meu Estagiário. Ele valida a
+O pacote público conecta a fila privada do Kit 3 ao quadro do Meu Estagiário. Ele valida a
 API e os escopos, registra apenas configuração local, testa com tarefa sintética e oferece uma ponte
 idempotente por tarefa. Credenciais nunca são incluídas.
 

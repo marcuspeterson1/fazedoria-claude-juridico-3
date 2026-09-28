@@ -11,7 +11,7 @@ import urllib.request
 from pathlib import Path
 
 BASE_URL = "https://sync.atendedireito.app"
-SECRET_FILE = Path.home() / ".metodo-euro" / "sync.json"
+SECRET_FILE = Path.home() / ".kit3-esteira" / "sync.json"
 
 def _ler_env(path: Path):
     try:
@@ -38,11 +38,11 @@ def descobrir_chave_existente(organizacao_id: str):
     except (OSError, json.JSONDecodeError):
         pass
 
-    nomes = ("ATENDE_DIREITO_SYNC_KEY", "METODO_EURO_SYNC_KEY")
+    nomes = ("ATENDE_DIREITO_SYNC_KEY", "KIT3_SYNC_KEY")
     for nome in nomes:
         if os.getenv(nome):
             return os.environ[nome], "ambiente seguro já configurado"
-    for path in (Path.home() / ".secrets.env", Path.home() / ".config" / "metodo-euro" / "secrets.env"):
+    for path in (Path.home() / ".secrets.env", Path.home() / ".config" / "kit3-esteira" / "secrets.env"):
         valores = _ler_env(path)
         for nome in nomes:
             if valores.get(nome):

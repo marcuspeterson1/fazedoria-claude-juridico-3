@@ -27,25 +27,17 @@ class EuroTests(unittest.TestCase):
             euro.transition(data, state)
         self.assertEqual(data["status"], "aprovada")
 
-    def test_private_confirmation_is_explicit(self):
-        parsed = euro.parser().parse_args(["configurar", "--nome", "A", "--escritorio", "E", "--papel", "advogado", "--agente", "claude"])
-        self.assertFalse(parsed.repositorio_privado_confirmado)
-
-    def test_invite_round_trip(self):
-        shared = {"nome_escritorio": "Escritório Exemplo", "organizacao": {
-            "id": "org-1", "controller": "Pessoa Um", "repositorio": "https://github.com/exemplo/privado"}}
-        code = euro.make_invite(shared, "controller")
-        decoded = euro.read_invite(code)
-        self.assertEqual(decoded["escritorio"], "Escritório Exemplo")
-        self.assertEqual(decoded["papel"], "controller")
-
-    def test_owner_can_accumulate_controller(self):
-        parsed = euro.parser().parse_args(["iniciar-escritorio", "--nome", "A", "--escritorio", "E", "--tambem-controller"])
-        self.assertTrue(parsed.tambem_controller)
-
-    def test_invite_requires_specific_role(self):
-        parsed = euro.parser().parse_args(["gerar-codigo", "--papel", "advogado"])
-        self.assertEqual(parsed.papel, "advogado")
+    def test_start_office_grants_every_role_alone(self):
+        with tempfile.TemporaryDirectory() as d, \
+             mock.patch.object(euro, "ROOT", Path(d)), \
+             mock.patch.object(euro, "LOCAL", Path(d) / ".escritorio.local.json"), \
+             mock.patch.object(euro, "SHARED", Path(d) / "escritorio.json"):
+            euro.save(euro.SHARED, {"nome_escritorio": "CONFIGURE-ME", "organizacao": None, "modo": "mvp"})
+            parsed = euro.parser().parse_args(["iniciar-escritorio", "--nome", "Marcus", "--escritorio", "E",
+                                                "--repositorio", "https://example.invalid/r"])
+            parsed.fn(parsed)
+            local = euro.load(euro.LOCAL)
+            self.assertEqual(set(local["papeis"]), {"dono", "controller", "advogado"})
 
     def test_document_policy_is_owner_command(self):
         parsed = euro.parser().parse_args(["configurar-documentos", "--onde-modelos", "Drive", "--pastas-clientes", "sim", "--destino-copia", "Pasta do cliente", "--padrao-nomes", "TIPO - CLIENTE"])
@@ -55,12 +47,11 @@ class EuroTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             euro.parser().parse_args(["entregar", "tarefa", "minuta.docx"])
 
-    def test_daily_card_is_role_specific(self):
+    def test_daily_card_shows_the_single_flow(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            euro.print_daily_card({"papel": "advogado", "papeis": ["advogado"]})
+            euro.print_daily_card({"papeis": ["dono", "controller", "advogado"]})
         self.assertIn("/executar-tarefa", out.getvalue())
-        self.assertNotIn("/controller-fila", out.getvalue())
 
     def test_sync_materializes_chronology_and_markdown_locally(self):
         class FakeSync:
@@ -133,8 +124,8 @@ class EuroTests(unittest.TestCase):
              mock.patch.object(euro, "ROOT", Path(d)), \
              mock.patch.object(euro.platform, "system", return_value="Windows"):
             euro.cmd_prepare_auto_sync(None)
-            runner = (Path(d) / ".metodo-euro-runtime" / "auto-sync.py").read_text()
-            task = (Path(d) / ".metodo-euro-runtime" / "INSTALAR-TAREFA-WINDOWS.ps1").read_text()
+            runner = (Path(d) / ".esteira-runtime" / "auto-sync.py").read_text()
+            task = (Path(d) / ".esteira-runtime" / "INSTALAR-TAREFA-WINDOWS.ps1").read_text()
             self.assertIn("checar-intimacoes", runner)
             self.assertIn("--somente-se-dia-novo", runner)
             self.assertIn("New-ScheduledTaskTrigger -AtLogOn", task)
@@ -158,12 +149,6 @@ class EuroTests(unittest.TestCase):
     def test_windows_subprocesses_are_hidden(self):
         with mock.patch.object(euro.platform, "system", return_value="Windows"):
             self.assertIn("creationflags", euro.hidden_subprocess_kwargs())
-
-    def test_tampered_invite_is_rejected(self):
-        shared = {"nome_escritorio": "E", "organizacao": {"id": "1", "repositorio": "https://example.invalid/r"}}
-        code = euro.make_invite(shared)
-        with self.assertRaises(SystemExit):
-            euro.read_invite(code + "x")
 
     def test_skill_link_preserves_existing(self):
         with tempfile.TemporaryDirectory() as d:

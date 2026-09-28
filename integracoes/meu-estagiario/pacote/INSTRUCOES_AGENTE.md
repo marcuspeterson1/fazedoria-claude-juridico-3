@@ -8,17 +8,18 @@
 6. Não escreva em financeiro, não altere skills do Meu Estagiário e não use `/chat`.
 7. O Sync permanece somente leitura. Aprovação jurídica e protocolo manual são gates distintos.
 8. `ponte.py` sozinho espelha só uma tarefa por chamada. Se o usuário quiser o ciclo fechando
-   sozinho (Controller responde por nota, motor atribui e dispara a minuta headless), ofereça o
-   motor (`motor.py`) como passo SEPARADO e explícito — nunca instale silenciosamente.
+   sozinho (uma nota no card já espelhado dispara o motor, que registra a providência e produz a
+   minuta na mesma passada), ofereça o motor (`motor.py`) como passo SEPARADO e explícito — nunca
+   instale silenciosamente.
 9. Antes de instalar o agendamento do motor, confirme: a variável `MEU_ESTAGIARIO_API_KEY` precisa
    estar disponível de forma PERMANENTE no ambiente da máquina (não só na sessão atual), porque o
    agendamento roda sem terminal e sem humano pra digitar a chave. Rode
    `python3 motor.py ciclo --kit-root ...` manualmente pelo menos uma vez, mostre o resultado ao
-   usuário e só then ofereça `instalar-agendamento`.
-10. O motor só atribui responsável quando o nome na nota bate EXATAMENTE (sem acento/maiúscula
-    importar) com um nome em `/membros`. Isso não basta sozinho: o texto gravado na fila do Kit
-    também precisa bater exatamente com o nome que aquele colaborador usou ao entrar no Kit
-    (Prompt 2, "--nome"). Avise o usuário: mais seguro usar o MESMO nome nos dois lugares.
+   usuário e só então ofereça `instalar-agendamento`.
+10. Kit 3 é operado por uma pessoa só (o Dono acumula todos os papéis) — não existe "atribuir a
+    outra pessoa". O motor não tenta casar nome nenhum: qualquer nota nova (que não seja dele
+    mesmo) já vira a providência da tarefa, atribuída ao próprio Dono, e o motor tenta produzir a
+    minuta na mesma passada.
 11. O motor NUNCA escolhe skill jurídica específica por conta própria além do que o próprio
     escritório já tiver criado (Ato 2) — sem isso, cai no genérico `gerar-peticao-por-modelo`.
     Não prometa que o motor "sabe" qual petição escrever; ele repete o método, não substitui a
