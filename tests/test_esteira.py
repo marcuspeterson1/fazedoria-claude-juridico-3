@@ -8,49 +8,49 @@ import os
 from pathlib import Path
 from unittest import mock
 
-SPEC = importlib.util.spec_from_file_location("euro", Path(__file__).parents[1] / "euro.py")
-euro = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(euro)
+SPEC = importlib.util.spec_from_file_location("esteira", Path(__file__).parents[1] / "esteira.py")
+esteira = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(esteira)
 SYNC_SPEC = importlib.util.spec_from_file_location("kit_sync", Path(__file__).parents[1] / "conectores" / "sync.py")
 kit_sync = importlib.util.module_from_spec(SYNC_SPEC)
 SYNC_SPEC.loader.exec_module(kit_sync)
 
-class EuroTests(unittest.TestCase):
+class EsteiraTests(unittest.TestCase):
     def test_state_machine_rejects_skip(self):
         data = {"status": "aberta"}
         with self.assertRaises(SystemExit):
-            euro.transition(data, "aprovada")
+            esteira.transition(data, "aprovada")
 
     def test_state_machine_happy_path(self):
         data = {"status": "aberta"}
         for state in ("em_execucao", "entregue", "aprovada"):
-            euro.transition(data, state)
+            esteira.transition(data, state)
         self.assertEqual(data["status"], "aprovada")
 
     def test_start_office_grants_every_role_alone(self):
         with tempfile.TemporaryDirectory() as d, \
-             mock.patch.object(euro, "ROOT", Path(d)), \
-             mock.patch.object(euro, "LOCAL", Path(d) / ".escritorio.local.json"), \
-             mock.patch.object(euro, "SHARED", Path(d) / "escritorio.json"):
-            euro.save(euro.SHARED, {"nome_escritorio": "CONFIGURE-ME", "organizacao": None, "modo": "mvp"})
-            parsed = euro.parser().parse_args(["iniciar-escritorio", "--nome", "Marcus", "--escritorio", "E",
+             mock.patch.object(esteira, "ROOT", Path(d)), \
+             mock.patch.object(esteira, "LOCAL", Path(d) / ".escritorio.local.json"), \
+             mock.patch.object(esteira, "SHARED", Path(d) / "escritorio.json"):
+            esteira.save(esteira.SHARED, {"nome_escritorio": "CONFIGURE-ME", "organizacao": None, "modo": "mvp"})
+            parsed = esteira.parser().parse_args(["iniciar-escritorio", "--nome", "Marcus", "--escritorio", "E",
                                                 "--repositorio", "https://example.invalid/r"])
             parsed.fn(parsed)
-            local = euro.load(euro.LOCAL)
+            local = esteira.load(esteira.LOCAL)
             self.assertEqual(set(local["papeis"]), {"dono", "controller", "advogado"})
 
     def test_document_policy_is_owner_command(self):
-        parsed = euro.parser().parse_args(["configurar-documentos", "--onde-modelos", "Drive", "--pastas-clientes", "sim", "--destino-copia", "Pasta do cliente", "--padrao-nomes", "TIPO - CLIENTE"])
+        parsed = esteira.parser().parse_args(["configurar-documentos", "--onde-modelos", "Drive", "--pastas-clientes", "sim", "--destino-copia", "Pasta do cliente", "--padrao-nomes", "TIPO - CLIENTE"])
         self.assertEqual(parsed.onde_modelos, "Drive")
 
     def test_delivery_requires_model_traceability(self):
         with self.assertRaises(SystemExit):
-            euro.parser().parse_args(["entregar", "tarefa", "minuta.docx"])
+            esteira.parser().parse_args(["entregar", "tarefa", "minuta.docx"])
 
     def test_daily_card_shows_the_single_flow(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            euro.print_daily_card({"papeis": ["dono", "controller", "advogado"]})
+            esteira.print_daily_card({"papeis": ["dono", "controller", "advogado"]})
         self.assertIn("/executar-tarefa", out.getvalue())
 
     def test_sync_materializes_chronology_and_markdown_locally(self):
@@ -102,28 +102,28 @@ class EuroTests(unittest.TestCase):
                 return [{"id": 42, "processo": "000", "data": "2026-09-08",
                          "tipo_ato": "despacho", "data_fatal": "2026-09-15"}]
         with tempfile.TemporaryDirectory() as d, \
-             mock.patch.object(euro, "INBOX_DIR", Path(d)), \
-             mock.patch.object(euro, "INBOX_STATE", Path(d) / "intimacoes.json"):
+             mock.patch.object(esteira, "INBOX_DIR", Path(d)), \
+             mock.patch.object(esteira, "INBOX_STATE", Path(d) / "intimacoes.json"):
             local = {"organizacao_id": "org"}
-            _inbox, novas, consultou = euro.atualizar_inbox_intimacoes(local, FakeSync(), True, "2026-09-08")
+            _inbox, novas, consultou = esteira.atualizar_inbox_intimacoes(local, FakeSync(), True, "2026-09-08")
             self.assertEqual(novas, 1)
             self.assertTrue(consultou)
-            _inbox, novas, consultou = euro.atualizar_inbox_intimacoes(local, FakeSync(), True, "2026-09-08")
+            _inbox, novas, consultou = esteira.atualizar_inbox_intimacoes(local, FakeSync(), True, "2026-09-08")
             self.assertEqual(novas, 0)
             self.assertFalse(consultou)
             self.assertFalse(any(Path(d).glob("fila/*.json")))
 
     def test_parser_requires_controller_confirmation_to_import_intimation(self):
         with self.assertRaises(SystemExit):
-            euro.parser().parse_args(["importar-intimacao", "42"])
-        parsed = euro.parser().parse_args(["importar-intimacao", "42", "--providencia", "Analisar"])
+            esteira.parser().parse_args(["importar-intimacao", "42"])
+        parsed = esteira.parser().parse_args(["importar-intimacao", "42", "--providencia", "Analisar"])
         self.assertEqual(parsed.id_sync, 42)
 
     def test_auto_sync_prepares_daily_inbox_and_windows_logon_trigger(self):
         with tempfile.TemporaryDirectory() as d, \
-             mock.patch.object(euro, "ROOT", Path(d)), \
-             mock.patch.object(euro.platform, "system", return_value="Windows"):
-            euro.cmd_prepare_auto_sync(None)
+             mock.patch.object(esteira, "ROOT", Path(d)), \
+             mock.patch.object(esteira.platform, "system", return_value="Windows"):
+            esteira.cmd_prepare_auto_sync(None)
             runner = (Path(d) / ".esteira-runtime" / "auto-sync.py").read_text()
             task = (Path(d) / ".esteira-runtime" / "INSTALAR-TAREFA-WINDOWS.ps1").read_text()
             self.assertIn("checar-intimacoes", runner)
@@ -147,21 +147,21 @@ class EuroTests(unittest.TestCase):
                 self.assertEqual(kit_sync.descobrir_chave_existente("org"), (None, None))
 
     def test_windows_subprocesses_are_hidden(self):
-        with mock.patch.object(euro.platform, "system", return_value="Windows"):
-            self.assertIn("creationflags", euro.hidden_subprocess_kwargs())
+        with mock.patch.object(esteira.platform, "system", return_value="Windows"):
+            self.assertIn("creationflags", esteira.hidden_subprocess_kwargs())
 
     def test_skill_link_preserves_existing(self):
         with tempfile.TemporaryDirectory() as d:
             source = Path(d) / "source"; source.mkdir()
             target = Path(d) / "target"; target.mkdir()
-            self.assertIn("preservada", euro.link_skill(source, target))
+            self.assertIn("preservada", esteira.link_skill(source, target))
 
     def test_skill_link_is_idempotent(self):
         with tempfile.TemporaryDirectory() as d:
             source = Path(d) / "source"; source.mkdir()
             target = Path(d) / "target"
-            self.assertEqual(euro.link_skill(source, target), "ligada")
-            self.assertEqual(euro.link_skill(source, target), "já ligada")
+            self.assertEqual(esteira.link_skill(source, target), "ligada")
+            self.assertEqual(esteira.link_skill(source, target), "já ligada")
 
 if __name__ == "__main__":
     unittest.main()

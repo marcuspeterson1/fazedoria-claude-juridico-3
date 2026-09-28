@@ -22,7 +22,7 @@ são apagadas. Se uma skill oficial tiver sido personalizada, preserve as duas v
 para conciliar; não escolha silenciosamente.
 
 Antes de aplicar, crie um ponto de restauração Git. Depois, instale novamente os links de skills de
-forma idempotente. Quando a versão alterar `euro.py` ou o mecanismo oficial de agendamento, execute
+forma idempotente. Quando a versão alterar `esteira.py` ou o mecanismo oficial de agendamento, execute
 novamente `preparar-auto-sync` e atualize a tarefa de nome estável `Kit3AutoSync` ou o
 LaunchAgent `com.marcuspeterson.kit3.autosync`; isso substitui somente os arquivos gerenciados do runner e não
 cria um segundo agendamento. Comprove uma execução. Depois, rode os testes e `diagnosticar`, registre

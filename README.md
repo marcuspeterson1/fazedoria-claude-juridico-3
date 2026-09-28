@@ -68,13 +68,13 @@ qualquer ação pessoal inevitável.
 
 O computador executa `iniciar-escritorio` uma única vez. Depois:
 
-- `python3 euro.py instalar-skills` liga a fonte canônica aos diretórios reconhecidos por Claude Code
+- `python3 esteira.py instalar-skills` liga a fonte canônica aos diretórios reconhecidos por Claude Code
   e Codex, preservando qualquer instalação preexistente.
 - A skill `resumo-do-processo` transforma os autos obtidos no Sync em um resumo jurídico padronizado
   antes da escolha e execução da peça.
 - A skill `gerar-peticao-por-modelo` copia o modelo aprovado, preserva a identidade visual e mantém
   apenas os tópicos jurídicos aplicáveis, com registro do modelo e do destino da cópia.
-- `python3 euro.py preparar-auto-sync` cria os arquivos locais para sincronização conservadora a cada
+- `python3 esteira.py preparar-auto-sync` cria os arquivos locais para sincronização conservadora a cada
   dez minutos e consulta, no máximo uma vez por dia, a caixa de intimações no Sync. O Claude
   instala/ativa o agendamento nativo do sistema e comprova uma execução.
 
@@ -89,16 +89,26 @@ A skill `executar-tarefa` cobre as quatro etapas — não são papéis diferente
 ajudando você em momentos diferentes do dia. Toda mutação operacional cria commit e sincroniza
 automaticamente; em conflito, o Kit para e preserva o estado para conciliação, sem apagar versões.
 
-## Como começar o trabalho todos os dias
+## O que roda sozinho, e o que ainda depende de você abrir o Claude
 
-Depois da primeira instalação, não instale novamente nem repita nome do escritório ou chave do Sync.
-Abra uma conversa nova no Claude e envie:
+Sem o Meu Estagiário conectado, o Kit é MVP: nada cria tarefa sozinho, e você só vê a fila abrindo o
+Claude e mandando `/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.`.
 
-```text
-/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.
-```
+Com o Meu Estagiário conectado e o motor agendado (`integracoes/meu-estagiario/`), o ciclo diário
+roda sem você abrir o Claude:
 
-O instalador e o diagnóstico repetem automaticamente essa orientação.
+1. A cada 10 minutos, o agendamento do núcleo sincroniza a fila e, no máximo 1x por dia, consulta
+   intimações novas no Sync.
+2. A cada 10 minutos, o motor pega as intimações novas e, sozinho, cria a tarefa e o card
+   correspondente no Meu Estagiário — sem esperar ninguém decidir nada.
+3. Você lê o card no Meu Estagiário e escreve uma nota dizendo o que fazer.
+4. No ciclo seguinte (até 10 minutos depois), o motor lê essa nota, registra a providência e já
+   tenta produzir a minuta sozinho, headless.
+5. Se conseguir, devolve o link da minuta como nota no mesmo card, pronta para revisão. Se não
+   conseguir, devolve uma nota pedindo que você abra o Claude e continue.
+
+Você só precisa abrir uma conversa no Claude quando: quer mexer manualmente numa tarefa, quer
+revisar/aprovar (`revisar`), ou o motor avisou que não conseguiu concluir sozinho.
 
 ## Atualizações sem reinstalar
 
@@ -154,14 +164,15 @@ sintética, confirma por leitura de volta os estados `Em andamento` e `Em revis�
 técnica e arquiva o teste. `ponte.py` localiza o card pelo ID estável do Kit e cria ou atualiza sem
 duplicar.
 
-`ponte.py` sozinho é execução sob demanda, uma tarefa por chamada. Para o ciclo fechar sozinho —
-você escreve uma nota num card já espelhado dizendo o que fazer, o motor registra a providência e
-dispara headless a mesma skill que você rodaria, devolvendo o link da minuta como nota — use
+`ponte.py` sozinho é execução sob demanda, uma tarefa por chamada. Para o ciclo fechar sozinho, use
 `motor.py` (`integracoes/meu-estagiario/pacote/motor.py`), instalado e agendado à parte, nunca junto
-da instalação inicial. Como você acumula todos os papéis, não existe "atribuir a outra pessoa": a
-nota vira providência e o motor já tenta produzir na mesma passada. É o trecho mais novo do Kit; a
-primeira rodada deve ser acompanhada. Detalhe completo em
-`integracoes/meu-estagiario/pacote/INSTRUCOES_AGENTE.md`.
+da instalação inicial. Uma vez agendado, o motor faz DUAS coisas a cada passada: (1) pega intimação
+nova já em cache local (o auto-sync do núcleo consulta o Sync 1x/dia) e cria sozinho a tarefa + o
+card correspondente no Meu Estagiário, sem esperar decisão nenhuma; (2) lê nota nova em qualquer card
+já espelhado, registra como providência e já tenta produzir a minuta headless na mesma passada,
+devolvendo o link como nota. Como você acumula todos os papéis, não existe "atribuir a outra
+pessoa" — a nota já é a ordem de partida. É o trecho mais novo do Kit; a primeira rodada deve ser
+acompanhada. Detalhe completo em `integracoes/meu-estagiario/pacote/INSTRUCOES_AGENTE.md`.
 
 ### Advbox
 

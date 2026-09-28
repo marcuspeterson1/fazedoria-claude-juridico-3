@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 root = Path(__file__).parents[1]
-required = ["README.md", "AGENTS.md", "CLAUDE.md", "euro.py", "escritorio.json",
+required = ["README.md", "AGENTS.md", "CLAUDE.md", "esteira.py", "escritorio.json",
             "skills/configurar-kit3/SKILL.md",
             "skills/executar-tarefa/SKILL.md", "skills/revisar-entrega/SKILL.md",
             "skills/evoluir-skill/SKILL.md", "skills/resumo-do-processo/SKILL.md",

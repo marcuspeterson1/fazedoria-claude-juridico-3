@@ -85,7 +85,7 @@ def pull_before_read():
 
 def config():
     if not LOCAL.exists():
-        raise SystemExit("Configuração local ausente. Execute: python3 euro.py iniciar-escritorio")
+        raise SystemExit("Configuração local ausente. Execute: python3 esteira.py iniciar-escritorio")
     return load(LOCAL), load(SHARED)
 
 def print_daily_card(local):
@@ -533,7 +533,7 @@ if pull.returncode:
     subprocess.run(['git','rebase','--abort'], cwd=root, capture_output=True, **quiet)
     record('CONFLITO preservado; rebase abortado para conciliacao')
     raise SystemExit(pull.returncode)
-inbox = subprocess.run([sys.executable, str(Path(__file__).resolve().parent.parent / 'euro.py'),
+inbox = subprocess.run([sys.executable, str(Path(__file__).resolve().parent.parent / 'esteira.py'),
                         'checar-intimacoes', '--somente-se-dia-novo', '--silencioso'],
                        cwd=root, text=True, capture_output=True, **quiet)
 if inbox.stdout.strip():

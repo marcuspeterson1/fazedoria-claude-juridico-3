@@ -100,22 +100,22 @@ def postar_nota(api: instalar.API, me_task_id: str, texto: str) -> None:
     api.post(f"/tarefas/{me_task_id}/notas", {"texto": corpo})
 
 
-def executar_euro(kit_root: Path, *args: str) -> subprocess.CompletedProcess:
+def executar_esteira(kit_root: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
-        [sys.executable, str(kit_root / "euro.py"), *args],
+        [sys.executable, str(kit_root / "esteira.py"), *args],
         cwd=kit_root, text=True, capture_output=True, **hidden_subprocess_kwargs(),
     )
 
 
 def montar_prompt_headless(kit_id: str) -> str:
     return (
-        f"Você está no clone privado do Kit 3. Rode `python3 euro.py contexto {kit_id}` se ainda "
+        f"Você está no clone privado do Kit 3. Rode `python3 esteira.py contexto {kit_id}` se ainda "
         f"não tiver rodado, aplique integralmente /resumo-do-processo e depois "
         f"/gerar-peticao-por-modelo para produzir a minuta da tarefa {kit_id} "
         f"(fila/{kit_id}.json), sempre a partir de cópia de modelo aprovado — nunca documento "
         f"vazio. Se faltar modelo, autos determinantes ou qualquer dado necessário, PARE, "
         f"registre a lacuna e não finja concluir. Se e somente se concluir de verdade, rode "
-        f"`python3 euro.py entregar {kit_id} ARQUIVO --modelo IDENTIFICAÇÃO --copia-destino DESTINO` "
+        f"`python3 esteira.py entregar {kit_id} ARQUIVO --modelo IDENTIFICAÇÃO --copia-destino DESTINO` "
         f"com os valores reais. Não protocole nada. Não use casos de teste."
     )
 
@@ -137,16 +137,16 @@ def rodar_claude_headless(kit_root: Path, prompt: str, executor=None) -> subproc
 def processar_tarefa(api: instalar.API, kit_root: Path, kit_id: str, me_id: str,
                       providencia: str, executor=None) -> str:
     """Registra a providência e, na mesma passada, tenta produzir a minuta. Devolve 1 linha de log."""
-    atribuir = executar_euro(kit_root, "atribuir", kit_id, "--providencia", providencia, "--automatizar")
+    atribuir = executar_esteira(kit_root, "atribuir", kit_id, "--providencia", providencia, "--automatizar")
     if atribuir.returncode != 0:
         postar_nota(api, me_id, f"Não consegui registrar a providência: "
                                  f"{(atribuir.stderr or atribuir.stdout).strip()[:400]}")
         return f"{kit_id}: falhou ao registrar providência."
-    assumir = executar_euro(kit_root, "assumir", kit_id)
+    assumir = executar_esteira(kit_root, "assumir", kit_id)
     if assumir.returncode != 0:
         postar_nota(api, me_id, f"Não consegui assumir a tarefa: {assumir.stderr.strip()[:400]}")
         return f"{kit_id}: falhou ao assumir."
-    contexto = executar_euro(kit_root, "contexto", kit_id)
+    contexto = executar_esteira(kit_root, "contexto", kit_id)
     if contexto.returncode != 0:
         postar_nota(api, me_id, "O Sync não liberou os autos agora. Tentando de novo no próximo "
                                  f"ciclo. Detalhe: {contexto.stderr.strip()[:300]}")
@@ -170,6 +170,48 @@ def processar_tarefa(api: instalar.API, kit_root: Path, kit_id: str, me_id: str,
     return f"{kit_id}: não concluiu sozinho; card avisado para continuação humana."
 
 
+PROVIDENCIA_AGUARDANDO_TRIAGEM = (
+    "Aguardando decisão — leia os autos e responda com uma nota aqui dizendo o que fazer."
+)
+
+
+def _kit_id_da_intimacao(kit_root: Path, intimacao_id) -> str | None:
+    for path in (kit_root / "fila").glob("*.json"):
+        dados = json.loads(path.read_text(encoding="utf-8"))
+        if str(dados.get("intimacao_sync_id") or "") == str(intimacao_id):
+            return dados["id"]
+    return None
+
+
+def ciclo_captacao(api: instalar.API, kit_root: Path) -> list[str]:
+    """Transforma intimação nova do Sync (já em cache local, atualizada 1x/dia pelo auto-sync do
+    núcleo) em tarefa + card no Meu Estagiário, sem esperar ninguém abrir o Claude. A decisão
+    continua sendo humana — só que ela acontece depois, dentro do Meu Estagiário, por nota."""
+    inbox_path = kit_root / ".intimacoes-inbox" / "intimacoes.json"
+    if not inbox_path.is_file():
+        return []
+    inbox = json.loads(inbox_path.read_text(encoding="utf-8"))
+    relatorio: list[str] = []
+    for item in inbox.get("intimacoes", {}).values():
+        if item.get("importada_em"):
+            continue
+        resultado = executar_esteira(kit_root, "importar-intimacao", str(item["id"]),
+                                      "--providencia", PROVIDENCIA_AGUARDANDO_TRIAGEM)
+        if resultado.returncode != 0:
+            relatorio.append(f"intimação {item['id']}: não virou tarefa — "
+                              f"{resultado.stderr.strip()[:200]}")
+            continue
+        kit_id = _kit_id_da_intimacao(kit_root, item["id"])
+        if not kit_id:
+            relatorio.append(f"intimação {item['id']}: tarefa criada mas não localizada — ignorada.")
+            continue
+        tarefa = json.loads((kit_root / "fila" / f"{kit_id}.json").read_text(encoding="utf-8"))
+        members = ponte.paged(api, "/membros", "membros")
+        ponte.mirror(api, tarefa, members)
+        relatorio.append(f"{kit_id}: intimação nova virou card no Meu Estagiário, aguardando sua nota.")
+    return relatorio
+
+
 def ciclo(kit_root: Path, executor=None, api: instalar.API | None = None) -> list[str]:
     local = local_config(kit_root)
     if not integracao_habilitada(local):
@@ -183,7 +225,7 @@ def ciclo(kit_root: Path, executor=None, api: instalar.API | None = None) -> lis
         api = instalar.API(instalar.token_from_environment())
     estado = carregar_estado(kit_root)
     tarefas_estado = estado.setdefault("tarefas", {})
-    relatorio: list[str] = []
+    relatorio: list[str] = list(ciclo_captacao(api, kit_root))
     for me_task in listar_tarefas_kit_no_me(api):
         me_id = str(me_task["id"])
         kit_id = id_da_tarefa_kit(str(me_task.get("descricao") or ""))

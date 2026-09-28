@@ -20,6 +20,11 @@
     outra pessoa". O motor não tenta casar nome nenhum: qualquer nota nova (que não seja dele
     mesmo) já vira a providência da tarefa, atribuída ao próprio Dono, e o motor tenta produzir a
     minuta na mesma passada.
+13. Cada ciclo do motor também roda a CAPTAÇÃO primeiro: qualquer intimação pendente já em cache
+    local (`.intimacoes-inbox/intimacoes.json`, atualizado 1x/dia pelo auto-sync do núcleo) vira
+    tarefa e card no Meu Estagiário sozinha, sem decisão humana prévia — a decisão continua
+    existindo, só que dentro do Meu Estagiário, pela nota. Isso é o que fecha o ciclo diário sem
+    o usuário precisar abrir o Claude nenhuma vez.
 11. O motor NUNCA escolhe skill jurídica específica por conta própria além do que o próprio
     escritório já tiver criado (Ato 2) — sem isso, cai no genérico `gerar-peticao-por-modelo`.
     Não prometa que o motor "sabe" qual petição escrever; ele repete o método, não substitui a

@@ -40,40 +40,40 @@ with tempfile.TemporaryDirectory(prefix="kit3-ensaio-") as tmp:
     git(base, "clone", str(bare), str(escritorio))
     git(escritorio, "config", "user.name", "Marcus Peterson"); git(escritorio, "config", "user.email", "marcus@example.invalid")
 
-    run(escritorio, sys.executable, "euro.py", "iniciar-escritorio", "--nome", "Marcus Peterson",
+    run(escritorio, sys.executable, "esteira.py", "iniciar-escritorio", "--nome", "Marcus Peterson",
         "--escritorio", "Escritório Exemplo", "--agente", "claude", "--repositorio", str(bare))
-    run(escritorio, sys.executable, "euro.py", "configurar-documentos", "--onde-modelos", "Pasta de modelos aprovados",
+    run(escritorio, sys.executable, "esteira.py", "configurar-documentos", "--onde-modelos", "Pasta de modelos aprovados",
         "--pastas-clientes", "sim", "--destino-copia", "Pasta do cliente", "--padrao-nomes", "TIPO - CLIENTE - DATA")
     git(escritorio, "add", "escritorio.json"); git(escritorio, "commit", "-m", "configura escritório"); git(escritorio, "push")
     links = base / "perfis"
-    run(escritorio, sys.executable, "euro.py", "instalar-skills", "--destino-base", str(links))
+    run(escritorio, sys.executable, "esteira.py", "instalar-skills", "--destino-base", str(links))
     if not (links / ".claude/skills/executar-tarefa/SKILL.md").is_file() or not (links / ".agents/skills/executar-tarefa/SKILL.md").is_file():
         raise SystemExit("Skills não ficaram disponíveis.")
-    run(escritorio, sys.executable, "euro.py", "preparar-auto-sync")
+    run(escritorio, sys.executable, "esteira.py", "preparar-auto-sync")
     if not (escritorio / ".esteira-runtime/auto-sync.py").is_file():
         raise SystemExit("Runner de auto-sync não foi preparado.")
-    run(escritorio, sys.executable, "euro.py", "diagnosticar")
+    run(escritorio, sys.executable, "esteira.py", "diagnosticar")
 
     task_ids = []
     for index, (ref, cnj, providencia) in enumerate(CASES, 1):
-        task_id = run(escritorio, sys.executable, "euro.py", "criar-tarefa", "--cnj", cnj,
+        task_id = run(escritorio, sys.executable, "esteira.py", "criar-tarefa", "--cnj", cnj,
                        "--referencia", ref, "--providencia", providencia, capture=True)
         task_ids.append(task_id)
         git(escritorio, "add", "fila"); git(escritorio, "commit", "-m", f"fila: caso {index}"); git(escritorio, "push")
-        run(escritorio, sys.executable, "euro.py", "assumir", task_id)
+        run(escritorio, sys.executable, "esteira.py", "assumir", task_id)
         draft = base / f"minuta-{index}.md"
         draft.write_text(f"<!-- RASCUNHO: NÃO PROTOCOLAR -->\n# Rodada {index}\n\nProvidência sugerida sujeita a revisão: {providencia}.\n", encoding="utf-8")
-        run(escritorio, sys.executable, "euro.py", "entregar", task_id, str(draft), "--modelo", "modelo-aprovado.docx", "--copia-destino", draft.name)
+        run(escritorio, sys.executable, "esteira.py", "entregar", task_id, str(draft), "--modelo", "modelo-aprovado.docx", "--copia-destino", draft.name)
         git(escritorio, "add", "fila", "entregas"); git(escritorio, "commit", "-m", f"entrega caso {index}"); git(escritorio, "push")
-        run(escritorio, sys.executable, "euro.py", "revisar", task_id, "aprovada", "--feedback", f"Rodada técnica {index} aprovada.")
+        run(escritorio, sys.executable, "esteira.py", "revisar", task_id, "aprovada", "--feedback", f"Rodada técnica {index} aprovada.")
         git(escritorio, "add", "fila"); git(escritorio, "commit", "-m", f"revisa caso {index}"); git(escritorio, "push")
         if index == 1:
             proposal = base / "skill-candidata.md"
             proposal.write_text("# Método\n\nIdentificar o ato, conferir se já houve réplica e escolher entre impugnação completa ou manifestação curta. Manter revisão humana.\n", encoding="utf-8")
-            run(escritorio, sys.executable, "euro.py", "propor-skill", task_id, "--nome", "manifestacao-pos-contestacao", "--arquivo", str(proposal))
+            run(escritorio, sys.executable, "esteira.py", "propor-skill", task_id, "--nome", "manifestacao-pos-contestacao", "--arquivo", str(proposal))
             git(escritorio, "add", "propostas"); git(escritorio, "commit", "-m", "skill: propõe candidata após caso 1"); git(escritorio, "push")
             proposal_name = next((escritorio / "propostas").glob("manifestacao-pos-contestacao--*.md")).name
-            run(escritorio, sys.executable, "euro.py", "promover-skill", proposal_name)
+            run(escritorio, sys.executable, "esteira.py", "promover-skill", proposal_name)
             git(escritorio, "add", "skills"); git(escritorio, "commit", "-m", "skill: promove candidata revisada"); git(escritorio, "push")
 
     if git(escritorio, "status", "--porcelain"):

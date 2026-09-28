@@ -48,6 +48,10 @@ class FakeAPI:
             self._next_note_id += 1
             item.setdefault("notas", []).append(nota)
             return {"nota": nota}
+        if path == "/tarefas":
+            item = {"id": f"me{len(self.tasks) + 1}", "status": "todo", "notas": [], **body}
+            self.tasks.append(item)
+            return {"tarefa": dict(item)}
         raise AssertionError(path)
 
     def patch(self, path, body):
@@ -60,7 +64,7 @@ class FakeAPI:
 def montar_kit_root(tmp: Path, colaborador: str) -> Path:
     kit_root = tmp / "kit"
     kit_root.mkdir()
-    shutil.copy(KIT_ROOT_REAL / "euro.py", kit_root / "euro.py")
+    shutil.copy(KIT_ROOT_REAL / "esteira.py", kit_root / "esteira.py")
     shutil.copytree(KIT_ROOT_REAL / "conectores", kit_root / "conectores")
     (kit_root / "fila").mkdir()
     (kit_root / ".escritorio.local.json").write_text(json.dumps({
@@ -90,6 +94,50 @@ def ler_tarefa_kit(kit_root: Path, kit_id: str) -> dict:
     return json.loads((kit_root / "fila" / f"{kit_id}.json").read_text(encoding="utf-8"))
 
 
+class CaptacaoTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.kit_root = montar_kit_root(self.tmp, "Marcus Peterson")
+        (self.kit_root / ".intimacoes-inbox").mkdir()
+        (self.kit_root / ".intimacoes-inbox" / "intimacoes.json").write_text(json.dumps({
+            "schema_version": 1, "organizacao_id": "org-1",
+            "intimacoes": {
+                "900": {"id": 900, "processo": "0000009-00.2026.0.00.0009", "data": "2026-01-01",
+                         "tipo_ato": "despacho", "data_fatal": None, "importada_em": None, "tarefa_id": None},
+            },
+        }), encoding="utf-8")
+        self.api = FakeAPI()
+        self.api.members = [{"id": "m1", "nome": "Marcus Peterson"}]
+        self.api.tasks = []
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_intimacao_pendente_vira_tarefa_e_card_sozinha(self):
+        relatorio = motor.ciclo_captacao(self.api, self.kit_root)
+        self.assertEqual(len(relatorio), 1)
+        self.assertIn("intimação nova virou card", relatorio[0])
+        arquivos = list((self.kit_root / "fila").glob("*.json"))
+        self.assertEqual(len(arquivos), 1)
+        tarefa = json.loads(arquivos[0].read_text())
+        self.assertEqual(tarefa["cnj"], "0000009-00.2026.0.00.0009")
+        self.assertEqual(tarefa["providencia_sugerida"], motor.PROVIDENCIA_AGUARDANDO_TRIAGEM)
+        self.assertEqual(len(self.api.tasks), 1)
+        self.assertIn(f"[KIT3_TAREFA:{tarefa['id']}]", self.api.tasks[0]["descricao"])
+
+    def test_nao_duplica_ao_rodar_duas_vezes(self):
+        motor.ciclo_captacao(self.api, self.kit_root)
+        segundo = motor.ciclo_captacao(self.api, self.kit_root)
+        self.assertEqual(segundo, [])
+        self.assertEqual(len(list((self.kit_root / "fila").glob("*.json"))), 1)
+        self.assertEqual(len(self.api.tasks), 1)
+
+    def test_sem_caixa_de_entrada_nao_faz_nada(self):
+        shutil.rmtree(self.kit_root / ".intimacoes-inbox")
+        self.assertEqual(motor.ciclo_captacao(self.api, self.kit_root), [])
+
+
 class ParseNotaTests(unittest.TestCase):
     def test_nota_vira_providencia_inteira(self):
         info = motor.parse_nota("Gerar manifestação de ciência, é urgente.")
@@ -117,14 +165,14 @@ class CicloTests(unittest.TestCase):
         self.api.tasks = [{"id": "me1", "status": "todo",
                             "descricao": f"[KIT3_TAREFA:{self.kit_id}] Referência: ref",
                             "notas": []}]
-        real_executar = motor.executar_euro
+        real_executar = motor.executar_esteira
 
         def contexto_simulado(kit_root, *args):
             if args and args[0] == "contexto":
                 return subprocess.CompletedProcess(args, 0, stdout="ENTRADA AUTORIZADA: (simulada)\n", stderr="")
             return real_executar(kit_root, *args)
 
-        patcher = mock.patch.object(motor, "executar_euro", side_effect=contexto_simulado)
+        patcher = mock.patch.object(motor, "executar_esteira", side_effect=contexto_simulado)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -141,7 +189,7 @@ class CicloTests(unittest.TestCase):
 
         def executor_falso(kit_root, prompt):
             self.assertIn(self.kit_id, prompt)
-            motor.executar_euro(kit_root, "entregar", self.kit_id, str(draft),
+            motor.executar_esteira(kit_root, "entregar", self.kit_id, str(draft),
                                  "--modelo", "modelo-aprovado.docx", "--copia-destino", "Drive/Cliente/peça.docx")
             return subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
 
