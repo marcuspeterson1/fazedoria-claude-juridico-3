@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "nome_escritorio": "CONFIGURE-ME",
+  "organizacao": null,
+  "modo": "mvp",
+  "fonte_autos": "sync",
+  "versao_kit": "3.0.0",
+  "producao_documental": {
+    "modelo_obrigatorio": true,
+    "onde_ficam_modelos": "CONFIGURE-ME",
+    "pastas_clientes_existem": null,
+    "destino_da_copia": "CONFIGURE-ME",
+    "padrao_nomes": "CONFIGURE-ME",
+    "preservar_identidade_visual": true,
+    "preservar_topicos_aplicaveis": true
+  },
+  "conectores": {
+    "sync": {"habilitado": true, "obrigatorio_metodo_euro": true, "somente_leitura": true},
+    "infinitum": {"habilitado": false},
+    "meu_estagiario": {"habilitado": false, "modo": "espelho_operacional"},
+    "advbox": {"habilitado": false, "modo": "advbox_operacional"}
+  },
+  "gates": {
+    "revisao_humana": true,
+    "protocolo_manual": true,
+    "promocao_skill_por_controller": true
+  }
+}

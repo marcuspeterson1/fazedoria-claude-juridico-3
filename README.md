@@ -1,0 +1,298 @@
+# Kit 3 - Ligando o Motor da sua Esteira
+
+Versão 3.0.0. O Kit 3 parte de tudo que o Kit 2 já entrega (MVP Claude + GitHub, criação de skill por
+revisão humana, fila compartilhada, caixa local de intimações do Sync em somente leitura) e acrescenta
+a peça que faltava para o ciclo fechar sozinho quando o escritório usa o Meu Estagiário: um motor
+opcional (instalado à parte, nunca junto do núcleo) que lê a nota do Controller no card já espelhado
+("Responsável: ...", "Providência: ..."), atribui a tarefa na fila e dispara headless, na máquina do
+Advogado, a mesma skill de produção que um humano rodaria — devolvendo a minuta como nota no próprio
+card. Sempre com revisão humana e protocolo manual depois; nunca escreve financeiro nem protocola.
+
+Este é o Ato 3 do Método Euro (agente, esteira, escala) — quem só precisa do MVP e do método de
+criação de skill continua bem servido pelo Kit 2. O Kit 3 é para quem já validou o Kit 2 e quer o
+ciclo automático de verdade.
+
+Um núcleo único para Dono/Administrador, Controller e Advogado, Claude Code e Codex.
+O repositório público deste Kit é apenas o molde, sem dados. Durante a instalação, o Claude cria um
+novo repositório **privado** para o escritório. Esse repositório privado é a fonte canônica; cada
+pessoa usa sua conta pessoal do GitHub e um clone próprio. O núcleo funciona sem software jurídico:
+
+`Sync (autos, leitura) → fila GitHub → Controller → Advogado → revisão → proposta → skill`
+
+O Sync é obrigatório no Método Euro. Infinitum e outros softwares jurídicos são opcionais. O modo
+inicial é `mvp`: trabalha com tarefas reais e permite a leitura dos autos no Sync, mas mantém
+bloqueada qualquer escrita em sistemas externos.
+
+## Instalação guiada — dois prompts
+
+O Dono instala primeiro e gera o código. Depois entrega ao colaborador o segundo prompt, substituindo
+`SEU_CODIGO_ENTRADA` pelo código gerado. Cada pessoa envia um único prompt ao Claude Code na pasta
+permanente `Claude`; ninguém precisa abrir Terminal ou PowerShell.
+
+### Prompt 1 — Dono/Administrador
+
+```text
+Instale o Kit 3 - Ligando o Motor da sua Esteira usando esta fonte oficial:
+https://github.com/marcuspeterson1/fazedoria-claude-juridico-3
+
+Leia e audite os arquivos desse repositório antes de executar qualquer coisa. Faça tudo por mim
+usando suas ferramentas internas, sem me mandar abrir terminal. Instale silenciosamente os
+pré-requisitos oficiais e seguros que faltarem, inclusive Python 3, sem me pedir para escolher o
+método. Só me interrompa para login oficial no GitHub ou decisão pessoal realmente inevitável.
+
+Antes de instalar, verifique se este Kit já existe e está configurado neste computador. Se existir,
+não recomece: use a skill `atualizar-kit`, compare a versão pública com a instalada e aplique somente
+as novidades, preservando escritório, pessoas, fila, entregas, skills, caminhos e credenciais.
+
+Estou criando o escritório. Peça somente meu nome e o nome do escritório. Crie um novo repositório
+privado, copie o Kit, confirme no GitHub que está privado e execute `iniciar-escritorio`. Registre-me
+como Dono/Administrador e pergunte se também trabalharei como Controller.
+
+Ao final, pergunte se quero gerar código para Controller ou Advogado. Somente o Dono pode gerar esses
+códigos. Entregue o código e o Prompt 2 completo já com `SEU_CODIGO_ENTRADA` substituído. Explique que,
+quando o Claude do colaborador identificar o usuário GitHub dele, eu deverei informar esse usuário
+aqui para você enviar o convite ao repositório privado.
+
+Explique que o Sync é a fonte obrigatória dos autos. Abra uma caixa segura do próprio computador para
+eu cadastrar a chave do Sync sem digitá-la nesta conversa. Execute `configurar-sync` e `testar-sync`.
+Não coloque a chave no código de entrada: ela deve ser cadastrada separadamente em cada computador
+autorizado.
+
+Configure comigo o padrão de documentos do escritório, uma pergunta por vez: onde ficam os modelos
+aprovados; onde ficam as pastas dos clientes, se existirem; se a cópia do modelo deve ser salva na
+pasta do cliente ou em outro lugar; e qual é o padrão de nomes dos arquivos. Registre as regras
+compartilhadas com `configurar-documentos`, mas guarde caminhos específicos desta máquina somente na
+configuração local. Explique que toda petição deve nascer de uma cópia de modelo aprovado para
+preservar logomarca, timbre, cabeçalho, rodapé, formatação e tópicos jurídicos validados. Nunca altere
+o modelo original. Se não houver modelo adequado, peça que eu indique ou envie um antes de redigir.
+
+Crie automaticamente uma pasta local padrão para os casos. Instale e ative a sincronização em
+segundo plano. Antes de mostrar a fila, sincronize silenciosamente; depois de assumir, entregar,
+revisar ou criar uma tarefa/skill, salve e envie silenciosamente. Não ensine Git nem peça comandos.
+
+Explique conceitos com palavras simples, uma ação por vez e checkpoints curtos. Não solicite nem
+grave tokens na conversa ou no Git. Não habilite Infinitum nem escrita em sistema externo nesta
+etapa inicial. Ao final, rode o diagnóstico e mostre apenas o que está pronto e qualquer ação
+pessoal inevitável.
+```
+
+### Prompt 2 — Colaborador
+
+O Dono deve substituir o marcador pelo código antes de entregar este prompt.
+
+```text
+Instale o Kit 3 - Ligando o Motor da sua Esteira usando esta fonte oficial:
+https://github.com/marcuspeterson1/fazedoria-claude-juridico-3
+
+Meu código de entrada é "SEU_CODIGO_ENTRADA".
+
+Leia e audite os arquivos antes de executar qualquer coisa. Faça tudo por mim usando suas ferramentas
+internas, sem me mandar abrir Terminal, PowerShell ou Prompt de Comando. Conduza como se eu nunca
+tivesse ouvido falar em GitHub: explique com palavras simples, uma ação por vez e checkpoints curtos.
+
+Antes de instalar, verifique se este Kit já existe e está configurado neste computador. Se existir,
+não recomece nem peça novamente o código: use a skill `atualizar-kit`, compare a versão pública com a
+instalada e aplique somente as novidades, preservando escritório, papel, fila, entregas, skills,
+caminhos e credenciais.
+
+Se eu ainda não tiver conta no GitHub, abra a página oficial de cadastro no navegador e acompanhe o
+passo a passo. Eu mesmo preencherei senha, confirmação de e-mail, captcha e autenticação. Depois faça
+o login oficial pelo navegador e identifique automaticamente meu nome de usuário, sem mostrar token.
+
+Decodifique o código para descobrir o escritório, o repositório privado e meu papel. Não me pergunte
+nome do escritório, função, agente ou pasta técnica. Pergunte somente meu nome. Se meu usuário ainda
+não tiver acesso ao repositório privado, mostre-o claramente para que o Dono envie o convite e aguarde
+minha confirmação; depois retome nesta mesma conversa, clone o repositório e execute
+`entrar-com-codigo` sem pedir novamente dados já respondidos.
+
+Depois da entrada no escritório, explique que o Sync fornece os autos e precisa ser autorizado também
+neste computador. Peça que o Dono/Administrador acompanhe esta única etapa e abra a caixa segura local
+para ele cadastrar a chave sem mostrá-la ao colaborador e sem colocá-la na conversa. Execute
+`configurar-sync` e `testar-sync`.
+
+Leia o padrão documental que o Dono já registrou. Não me pergunte novamente regras compartilhadas.
+Ajude-me apenas a localizar, neste computador, os modelos e as pastas autorizadas, guardando esses
+caminhos somente na configuração local. Explique que toda petição nasce de uma cópia de modelo
+aprovado, nunca de documento vazio, para preservar o jeito do escritório. Se nenhum modelo estiver
+disponível, peça que eu indique ou envie um e aguarde antes de redigir.
+
+Crie automaticamente a pasta local padrão para os casos, instale as skills e ative a sincronização em
+segundo plano. Sincronize silenciosamente antes de mostrar a fila e depois de cada alteração. Não me
+ensine Git nem peça comandos. Nunca solicite nem grave tokens na conversa ou no Git. Não habilite
+Infinitum nem escrita em sistema externo nesta etapa inicial. Ao final, rode o diagnóstico e
+mostre apenas o que está pronto e qualquer ação pessoal inevitável.
+```
+
+## Como funciona o código de entrada
+
+O código não é senha e não contém credencial. Ele carrega a identidade do escritório, o endereço do
+repositório privado e o papel Controller ou Advogado, com verificação contra alteração. O GitHub continua exigindo
+login pessoal e convite prévio para proteger os dados do escritório. Depois disso, o colaborador não
+digita novamente o nome do escritório nem escolhe seu papel.
+
+A chave do Sync deliberadamente não viaja no código. Se o computador já tiver o Sync integrado ao
+Claude ou configurado em ambiente/arquivo seguro, o Kit valida e reutiliza esse acesso no local em
+que ele já está, sem mover ou duplicar a chave. Somente quando não encontra uma integração válida, o
+Dono a cadastra uma vez por uma caixa local com texto oculto. Ela nunca aparece na linha de comando,
+no Git, no prompt ou nos logs.
+
+## Autos pelo Sync
+
+Ao assumir uma tarefa cuja fonte é `sync`, o comando `contexto` usa o CNJ para paginar a cronologia
+integral e buscar o Markdown disponível de cada documento. Ele cria uma pasta `entrada` privada e
+ignorada pelo Git contendo a cronologia, os documentos textuais e um manifesto das lacunas. Nada é
+escrito no Sync. Documento sem Markdown fica sinalizado para conferência do original; o Kit não finge
+que leu o que a API não entregou.
+
+Toda tarefa nova usa o Sync como fonte dos autos.
+
+## Fluxo operacional
+
+O primeiro computador executa `iniciar-escritorio`; o Dono usa `gerar-codigo --papel controller` ou
+`gerar-codigo --papel advogado`; os demais usam `entrar-com-codigo`. Depois:
+
+- `python3 euro.py instalar-skills` liga a fonte canônica aos diretórios reconhecidos por Claude Code
+  e Codex, preservando qualquer instalação preexistente.
+- A skill `resumo-do-processo` transforma os autos obtidos no Sync em um resumo jurídico padronizado
+  antes da escolha e execução da peça.
+- A skill `gerar-peticao-por-modelo` copia o modelo aprovado, preserva a identidade visual e mantém
+  apenas os tópicos jurídicos aplicáveis, com registro do modelo e do destino da cópia.
+- `python3 euro.py preparar-auto-sync` cria os arquivos locais para sincronização conservadora a cada
+  dez minutos e consulta, no máximo uma vez por dia, a caixa de intimações no Sync. O Claude
+  instala/ativa o agendamento nativo do sistema e comprova uma execução.
+
+1. Controller: usa `checar-intimacoes`; escolhe um item e confirma providência/responsável com
+   `importar-intimacao`, ou cria diretamente com `criar-tarefa`.
+2. Advogado: `listar`, `assumir ID`, `contexto ID`, copia o modelo aprovado, produz a peça e usa
+   `entregar ID ARQUIVO --modelo IDENTIFICAÇÃO --copia-destino DESTINO`.
+3. Controller: `revisar ID aprovada|ajustes|reprovada --feedback ...`.
+4. Se houver aprendizado reutilizável: `propor-skill`; após revisão, `promover-skill`.
+
+O aluno não precisa conhecer os comandos. `listar` atualiza a fila antes de exibi-la; toda mutação
+operacional cria commit e sincroniza automaticamente. Em conflito, o Kit para e preserva o estado
+para conciliação, sem apagar versões.
+
+## Como começar o trabalho todos os dias
+
+Depois da primeira instalação, não instale novamente nem repita escritório, código de entrada ou
+chave do Sync. Abra uma conversa nova no Claude e envie uma destas frases:
+
+Controller:
+
+```text
+/controller-fila Mostre a situação atual da fila e o que depende de mim.
+```
+
+Advogado:
+
+```text
+/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.
+```
+
+O instalador e o diagnóstico repetem automaticamente a orientação correspondente ao papel local.
+
+## Atualizações sem reinstalar
+
+Os mesmos prompts podem ser usados novamente quando houver versão nova. O Claude deve perceber que o
+escritório já está configurado e executar `atualizar-kit`: compara `versao-kit.json` e
+`manifesto-arquivos.json`, traz somente arquivos oficiais novos ou alterados e preserva dados do
+escritório, fila, entregas, propostas, skills próprias, caminhos locais e credenciais. Havendo
+personalização conflitante em arquivo oficial, mantém as duas versões para decisão do Dono.
+Quando o mecanismo de agendamento mudar, a atualização regenera o runner e atualiza a tarefa de nome
+estável, sem duplicar o agendamento, preservando credenciais e demais configurações locais.
+
+## Checkpoints visuais
+
+- `diagnosticar`: todos os itens críticos aparecem como `OK`.
+- `listar`: o Advogado vê apenas tarefas destinadas a ele ou ainda disponíveis.
+- `contexto`: materializa uma pasta `entrada` privada com os autos obtidos do Sync.
+- `status`: registra autor, horário, transição e hash da entrega.
+- `promover-skill`: só aceita proposta de tarefa aprovada e nunca sobrescreve skill existente.
+
+## Escritório real
+
+O Kit inclui apenas contratos de conectores. A promoção para `escritorio` exige edição consciente de
+`metodo-euro.json`, revisão dos adaptadores e teste próprio. O Sync permanece somente leitura. Este
+Kit não implementa protocolo automático. O adaptador Infinitum é uma interface opcional, não uma
+integração ativa nem uma credencial embutida.
+
+## Escolha do software jurídico
+
+O assistente primeiro instala, diagnostica e comprova o MVP Claude + GitHub. Somente depois pergunta
+qual software o escritório utiliza — Infinitum, Meu Estagiário, ADVBOX, Astrea, CPJ, ProJuris, outro
+ou nenhum — e se o aluno quer iniciar a conexão guiada agora ou continuar apenas com o núcleo. A
+integração opcional não interrompe nem condiciona a instalação inicial. Nunca empurre um produto.
+
+- Sem software: use a fila GitHub do núcleo.
+- Infinitum: use o instalador portátil em `integracoes/infinitum/` e siga integralmente suas instruções.
+- Meu Estagiário: use o instalador em `integracoes/meu-estagiario/`. Ele valida a API, registra a
+  configuração apenas no computador, executa teste sintético e oferece espelhamento idempotente.
+- ADVBOX: use o instalador em `integracoes/advbox/`. O aluno continua na ADVBOX; o Claude audita a
+  API, completa pela interface os tipos de tarefa e os fluxos e configura a ponte que cria tarefas
+  da Esteira dentro do próprio software.
+- Outro software: localize a documentação oficial da API, ensine com linguagem simples como obter e
+  guardar a chave localmente, compare as capacidades com o modelo ideal e não prometa o que a API
+  não permite.
+
+Somente se o aluno perguntar qual sistema está mais preparado, explique que o Meu Estagiário é hoje
+a referência porque foi adaptado, a pedido do Marcus, para receber a Esteira.
+
+### Infinitum
+
+O pacote integrado cria ou reutiliza o cadastro `Casos`, oito fases, quinze campos e duas automações.
+Ele é idempotente, não exclui estruturas e pode exigir que o agente configure `Casos` pela interface.
+O token fica somente no computador. Instalar a estrutura não instala o worker que gera minutas;
+revisão humana, aprovação jurídica e protocolo manual continuam separados.
+
+### Meu Estagiário
+
+O instalador valida identidade, escopos, membros, tipos de tarefa e etapas de caso contra a API ao
+vivo. A configuração guarda apenas o nome da variável de credencial. O teste opcional cria uma tarefa
+sintética, confirma por leitura de volta os estados `Em andamento` e `Em revisão`, escreve uma nota
+técnica e arquiva o teste. `ponte.py` localiza o card pelo ID estável do Kit e cria ou atualiza sem
+duplicar. Caso e responsável só são vinculados quando há correspondência exata.
+
+`ponte.py` sozinho é execução sob demanda, uma tarefa por chamada. Para o ciclo fechar sozinho —
+Controller responde a um card espelhado com uma nota `Responsável: ...`, o motor atribui na fila e
+dispara headless a mesma skill que um humano rodaria, devolvendo o link da minuta como nota — use
+`motor.py` (`integracoes/meu-estagiario/pacote/motor.py`), instalado e agendado à parte, nunca junto
+da instalação inicial. É o trecho mais novo do Kit; a primeira rodada de cada escritório deve ser
+acompanhada. Detalhe completo em `integracoes/meu-estagiario/pacote/INSTRUCOES_AGENTE.md`.
+
+### Advbox
+
+O instalador é híbrido porque a API pública não cria tipos de tarefa nem toda a configuração do
+Flowter. Ele lê `/settings`, identifica o que falta e conduz um usuário Gestor pela interface para
+criar oito tarefas `[EURO]` e três fluxos: produção/revisão, refação e protocolo manual. Uma captura
+da configuração é registrada por hash antes da aprovação.
+
+`ponte.py` cria na própria ADVBOX a próxima tarefa da Esteira, primeiro em simulação. A escrita é
+limitada a `POST /posts`, usa marcador idempotente e exige leitura de volta por ID. O pacote não
+altera cliente, processo, movimentação ou financeiro. O Sync continua sendo a fonte dos autos.
+
+Esta versão é prévia: entrega estrutura e ponte sob demanda. Um worker contínuo ainda precisa ser
+instalado posteriormente por polling da API ou webhook HTTP do Flowter para n8n/VPS e comprovado
+ponta a ponta antes de ser anunciado como automático.
+
+## Caixa de entrada de intimações
+
+`checar-intimacoes` pagina as pendentes dos últimos 30 dias por operações GET e guarda somente os
+dados necessários à triagem em `.metodo-euro-inbox/`, fora do Git. O agendamento usa
+`--somente-se-dia-novo`, portanto as demais sincronizações do mesmo dia não repetem a consulta. No
+Windows, a tarefa também dispara no logon; no macOS, usa `RunAtLoad`.
+
+O Kit nunca cria tarefas em lote sem decisão humana. O Controller escolhe uma intimação, informa a
+providência e, se quiser, o responsável; `importar-intimacao` cria uma única tarefa e deduplica pelo
+ID do Sync. A data sugerida pelo Sync é armazenada como não confirmada, sem recálculo. O Kit não chama
+os endpoints de tratar/reabrir, não altera monitoramento e não escreve no Sync.
+
+## Segurança e contingência
+
+- Nunca versione `.metodo-euro.local.json`, `.env`, autos, minutas reais ou certificados.
+- Se o Git estiver indisponível, trabalhe no clone local e não simule que sincronizou.
+- Se houver conflito, não apague nenhum lado. O comando para e informa os arquivos.
+- O auto-sync só atua com árvore limpa. Alterações ainda não commitadas ficam preservadas e a rodada
+  é registrada como bloqueada; o colaborador ou agente deve revisá-las e criar o commit.
+- Se um documento estiver ausente, registre a lacuna na minuta e na revisão.
+- Para desfazer uma instalação, remova apenas este clone; as configurações e credenciais externas não
+  são alteradas pelo Kit.

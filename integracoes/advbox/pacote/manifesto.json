@@ -1,0 +1,25 @@
+{
+  "package_name": "Instalador da Esteira de Petições para ADVBOX",
+  "version": "1.1.0-preview",
+  "api_base": "https://app.advbox.com.br/api/v1",
+  "credential_env": "ADVBOX_API_KEY",
+  "mode": "advbox_operacional",
+  "queue_source": "advbox",
+  "autos_source": "sync_read_only",
+  "task_types": [
+    {"key": "entrada", "name": "[EURO] VALIDAR ENTRADA"},
+    {"key": "produzir", "name": "[EURO] PRODUZIR MINUTA COM CLAUDE"},
+    {"key": "revisar", "name": "[EURO] REVISAR MINUTA"},
+    {"key": "refazer", "name": "[EURO] REFAZER MINUTA COM CLAUDE"},
+    {"key": "aprovar", "name": "[EURO] APROVADA PARA PROTOCOLO"},
+    {"key": "protocolar", "name": "[EURO] PROTOCOLAR MANUALMENTE"},
+    {"key": "confirmar_protocolo", "name": "[EURO] CONFIRMAR PROTOCOLO"},
+    {"key": "bloqueada", "name": "[EURO] BLOQUEADA - DOCUMENTOS FALTANTES"}
+  ],
+  "flowter": [
+    {"name": "Método Euro - Produção e revisão", "sequence": ["entrada", "produzir", "revisar"]},
+    {"name": "Método Euro - Refação", "sequence": ["refazer", "revisar"]},
+    {"name": "Método Euro - Protocolo manual", "sequence": ["aprovar", "protocolar", "confirmar_protocolo"]}
+  ],
+  "gates": {"human_review": true, "manual_filing": true, "no_financial_writes": true}
+}

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.metodo-euro.local.json
+.metodo-euro-inbox/
+.metodo-euro-contextos/
+.metodo-euro-runtime/
+.env

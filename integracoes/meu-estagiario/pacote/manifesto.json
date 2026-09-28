@@ -1,0 +1,23 @@
+{
+  "package_name": "Instalador da Esteira de Petições para Meu Estagiário",
+  "version": "1.0.0",
+  "api_base": "https://api.meuestagiario.atendedireito.app/v1",
+  "openapi_version_verified": "1.9.0",
+  "credential_env": "MEU_ESTAGIARIO_API_KEY",
+  "mode": "espelho_operacional",
+  "status_map": {
+    "aberta": "todo",
+    "em_execucao": "in_progress",
+    "entregue": "in_review",
+    "ajustes": "in_progress",
+    "reprovada": "in_review",
+    "aprovada": "done"
+  },
+  "gates": {
+    "sync_read_only": true,
+    "human_review": true,
+    "manual_filing": true,
+    "no_financial_writes": true,
+    "no_skill_overwrite": true
+  }
+}
