@@ -1,0 +1,242 @@
+<title>A Esteira em Ação</title>
+<style>
+/* Layout: linha do tempo vertical em formato de esteira, com estações numeradas ligadas por um trilho; elenco fixo no topo explica quem é quem antes da linha do tempo começar */
+:root{
+  --bg:#16140f; --bg-panel:#1f1c15; --bg-panel-2:#252017;
+  --fg:#f3eee2; --fg-muted:#ab9f88; --fg-faint:#766c58;
+  --accent:#dba445; --accent-soft:#dba44522; --accent-line:#dba44540;
+  --accent2:#75a39a; --accent2-soft:#75a39a22;
+  --danger:#d9765a; --danger-soft:#d9765a22;
+  --border:#3a3427;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#faf6ee; --bg-panel:#ffffff; --bg-panel-2:#f4efe2;
+    --fg:#241f14; --fg-muted:#655c48; --fg-faint:#948a72;
+    --accent:#b17f24; --accent-soft:#b17f2418; --accent-line:#b17f2440;
+    --accent2:#3f6f67; --accent2-soft:#3f6f6718;
+    --danger:#b6522f; --danger-soft:#b6522f18;
+    --border:#e6ddc8;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#faf6ee; --bg-panel:#ffffff; --bg-panel-2:#f4efe2;
+  --fg:#241f14; --fg-muted:#655c48; --fg-faint:#948a72;
+  --accent:#b17f24; --accent-soft:#b17f2418; --accent-line:#b17f2440;
+  --accent2:#3f6f67; --accent2-soft:#3f6f6718;
+  --danger:#b6522f; --danger-soft:#b6522f18;
+  --border:#e6ddc8;
+  color-scheme:light;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--fg); font-family:"IBM Plex Sans",system-ui,sans-serif; padding-inline:20px; padding-block:40px; line-height:1.55;}
+.wrap{max-width:760px; margin:0 auto;}
+h1,h2,h3{font-family:"Fraunces",Georgia,serif; font-weight:600; text-wrap:balance; margin:0;}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 0 10px;}
+.lede{color:var(--fg-muted); font-size:17px; max-width:56ch; margin:16px 0 0;}
+h1{font-size:clamp(30px,6vw,46px); line-height:1.08;}
+
+/* Header */
+header{margin-bottom:44px;}
+.kit-tag{display:inline-flex; align-items:center; gap:8px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--fg-faint); border:1px solid var(--border); padding:5px 12px; border-radius:100px; margin-top:22px;}
+.kit-tag b{color:var(--accent); font-weight:600;}
+
+/* Elenco */
+.elenco{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:0 0 52px;}
+.papel{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:18px 16px; min-width:0;}
+.papel .icone{width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:19px; margin-bottom:12px;}
+.papel.voce .icone{background:var(--accent2-soft); color:var(--accent2);}
+.papel.esteira .icone{background:var(--accent-soft); color:var(--accent);}
+.papel.me .icone{background:var(--bg-panel-2); color:var(--fg-muted); border:1px solid var(--border);}
+.papel h3{font-size:16px; margin-bottom:6px;}
+.papel p{font-size:13.5px; color:var(--fg-muted); margin:0;}
+
+/* Trilho / timeline */
+.trilho{position:relative; margin:0 0 56px;}
+.trilho::before{content:"";position:absolute; left:23px; top:8px; bottom:8px; width:2px; background:repeating-linear-gradient(var(--accent-line),var(--accent-line) 6px,transparent 6px,transparent 12px);}
+.estacao{position:relative; padding-left:64px; margin-bottom:34px;}
+.estacao:last-child{margin-bottom:0;}
+.num{position:absolute; left:0; top:0; width:48px; height:48px; border-radius:50%; background:var(--bg-panel); border:2px solid var(--accent); color:var(--accent); font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:16px; display:flex; align-items:center; justify-content:center;}
+.estacao.humano .num{border-color:var(--accent2); color:var(--accent2);}
+.estacao.alerta .num{border-color:var(--danger); color:var(--danger);}
+.cartao{background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:18px 20px;}
+.quem{display:inline-flex; align-items:center; gap:6px; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border-radius:100px; margin-bottom:10px;}
+.quem.esteira{background:var(--accent-soft); color:var(--accent);}
+.quem.humano{background:var(--accent2-soft); color:var(--accent2);}
+.cartao h3{font-size:18px; margin-bottom:8px;}
+.cartao p{margin:0; color:var(--fg-muted); font-size:14.5px;}
+.cartao .exemplo{margin-top:12px; background:var(--bg-panel-2); border-left:3px solid var(--accent); border-radius:0 8px 8px 0; padding:10px 14px; font-size:13.5px; color:var(--fg); font-style:italic;}
+.estacao.humano .cartao .exemplo{border-left-color:var(--accent2);}
+.ramo{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;}
+@media (max-width:520px){.ramo{grid-template-columns:1fr;} .elenco{grid-template-columns:1fr;}}
+.ramo .sub{border:1px dashed var(--border); border-radius:10px; padding:12px 14px; font-size:13.5px; min-width:0;}
+.ramo .sub b{display:block; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px;}
+.ramo .sub.ok{border-color:var(--accent-line);} .ramo .sub.ok b{color:var(--accent);}
+.ramo .sub.trava{border-color:var(--danger);} .ramo .sub.trava b{color:var(--danger);}
+
+/* Quadro automático x manual */
+.split{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:0 0 52px;}
+@media (max-width:560px){.split{grid-template-columns:1fr;}}
+.painel{border-radius:16px; padding:22px 20px; border:1px solid var(--border);}
+.painel.auto{background:var(--accent-soft); border-color:var(--accent-line);}
+.painel.manual{background:var(--bg-panel);}
+.painel h3{font-size:15px; font-family:"IBM Plex Mono",monospace; text-transform:uppercase; letter-spacing:.06em; margin-bottom:14px;}
+.painel.auto h3{color:var(--accent);}
+.painel.manual h3{color:var(--fg-muted);}
+.painel ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px;}
+.painel li{font-size:14px; padding-left:22px; position:relative; color:var(--fg);}
+.painel li::before{position:absolute; left:0; top:1px;}
+.painel.auto li::before{content:"●"; color:var(--accent); font-size:10px; top:5px;}
+.painel.manual li::before{content:"○"; color:var(--fg-faint); font-size:12px;}
+
+/* Gates */
+.gates{background:var(--bg-panel); border:1px solid var(--border); border-radius:16px; padding:24px 22px; margin-bottom:52px;}
+.gates h2{font-size:20px; margin-bottom:6px;}
+.gates .lede{margin-top:4px; margin-bottom:18px; font-size:14.5px;}
+.gates-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 18px;}
+@media (max-width:520px){.gates-grid{grid-template-columns:1fr;}}
+.gate-item{display:flex; gap:10px; font-size:13.5px; color:var(--fg-muted); align-items:flex-start;}
+.gate-item .marca{color:var(--accent); flex:none; font-weight:600;}
+
+/* Resumo final */
+.resumo{text-align:center; padding:36px 24px; border-radius:18px; background:linear-gradient(180deg,var(--accent-soft),transparent); border:1px solid var(--accent-line);}
+.resumo p{font-family:"Fraunces",Georgia,serif; font-size:clamp(18px,3.4vw,23px); line-height:1.45; color:var(--fg); max-width:44ch; margin:0 auto;}
+.resumo p b{color:var(--accent);}
+footer{text-align:center; margin-top:28px; font-size:12.5px; color:var(--fg-faint);}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Como funciona no dia a dia</p>
+    <h1>A esteira nunca tira folga. Você tira.</h1>
+    <p class="lede">Um jeito simples de entender o que roda sozinho, o que espera por você, e onde tudo isso acontece — sem termo técnico, só o fluxo de verdade.</p>
+    <div class="kit-tag">Escritório com <b>Kit 3</b> + <b>Meu Estagiário</b> conectado</div>
+  </header>
+
+  <section class="elenco">
+    <div class="papel voce">
+      <div class="icone">🧑‍⚖️</div>
+      <h3>Você</h3>
+      <p>O advogado do escritório. Decide o que fazer em cada caso. Só abre o Claude quando quer, nunca por obrigação diária.</p>
+    </div>
+    <div class="papel esteira">
+      <div class="icone">⚙️</div>
+      <h3>A Esteira</h3>
+      <p>Um estagiário que nunca dorme. Busca intimação, escreve rascunho — sempre copiando o modelo do escritório, nunca inventando do zero.</p>
+    </div>
+    <div class="papel me">
+      <div class="icone">📋</div>
+      <h3>Meu Estagiário</h3>
+      <p>O quadro onde vocês dois se falam. Cards e notas — nada de GitHub, nada de Claude Code para o resto da equipe.</p>
+    </div>
+  </section>
+
+  <section class="trilho">
+
+    <div class="estacao">
+      <div class="num">1</div>
+      <div class="cartao">
+        <span class="quem esteira">a esteira faz sozinha</span>
+        <h3>A intimação chega e vira card — sem ninguém pedir</h3>
+        <p>Todo dia, a esteira olha o Sync (a fonte oficial de intimações e movimentações dos processos) e pega o que é novo. Para cada intimação nova, ela cria um card no Meu Estagiário sozinha. Você não faz nada até aqui — o card já está esperando quando você abrir o quadro.</p>
+      </div>
+    </div>
+
+    <div class="estacao humano">
+      <div class="num">2</div>
+      <div class="cartao">
+        <span class="quem humano">você decide</span>
+        <h3>Você lê o card e escreve uma instrução curta</h3>
+        <p>Quando quiser — não precisa ser na hora — você abre o Meu Estagiário, lê do que se trata e escreve uma <b>nota</b> no card dizendo o que fazer. É exatamente como orientar um estagiário de carne e osso: uma frase direta resolve. Se o caso é de outro colega do escritório, a nota também pode dizer pra quem o card deve ir — essa pessoa nem precisa ter Claude Code, só precisa existir no Meu Estagiário.</p>
+        <div class="exemplo">"Responsável: [nome do colega]<br>Fazer manifestação de ciência da sentença, favorável a nós."</div>
+      </div>
+    </div>
+
+    <div class="estacao">
+      <div class="num">3</div>
+      <div class="cartao">
+        <span class="quem esteira">a esteira faz sozinha</span>
+        <h3>A esteira lê a nota e vai trabalhar</h3>
+        <p>Em até 10 minutos, a esteira encontra sua nota, busca os autos completos do processo e começa a escrever a minuta — sempre a partir de uma cópia do modelo já aprovado do escritório. Nunca cria petição do zero, nunca inventa numeração, timbre ou cabeçalho.</p>
+        <div class="ramo">
+          <div class="sub ok"><b>Consegue sozinha</b>Segue para a estação 4.</div>
+          <div class="sub trava"><b>Não consegue</b>Segue para a estação 4-B.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="estacao">
+      <div class="num">4</div>
+      <div class="cartao">
+        <span class="quem esteira">a esteira entrega</span>
+        <h3>A minuta pronta volta pro mesmo card</h3>
+        <p>Terminou, a esteira devolve o link da minuta como nota no mesmo card — junto do modelo usado e de onde a cópia foi salva. O card já fica marcado como "em revisão". Você só precisa abrir o link e ler.</p>
+      </div>
+    </div>
+
+    <div class="estacao alerta">
+      <div class="num">4B</div>
+      <div class="cartao">
+        <span class="quem esteira">a esteira avisa</span>
+        <h3>Se travar, ela conta e para — nunca finge</h3>
+        <p>Faltou modelo, faltou documento nos autos, ou a decisão exigia um julgamento que só você pode fazer: a esteira deixa uma nota explicando exatamente onde parou e pede que você continue abrindo uma conversa no Claude. Ela nunca entrega algo pela metade fingindo que terminou.</p>
+      </div>
+    </div>
+
+    <div class="estacao humano">
+      <div class="num">5</div>
+      <div class="cartao">
+        <span class="quem humano">você decide</span>
+        <h3>Revisão sempre humana, protocolo sempre manual</h3>
+        <p>Toda minuta — travada ou entregue — é só um rascunho. Você (ou quem revisa no escritório) lê, ajusta o que precisar e só depois protocola pelo caminho normal. A esteira nunca protocola nada sozinha, em nenhuma hipótese.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="split">
+    <div class="painel auto">
+      <h3>Roda sozinho</h3>
+      <ul>
+        <li>Buscar intimação nova no Sync (1x por dia)</li>
+        <li>Criar o card no Meu Estagiário</li>
+        <li>Ler sua nota e buscar os autos</li>
+        <li>Escrever a minuta a partir do modelo aprovado</li>
+        <li>Devolver o link pronto — ou avisar que travou</li>
+      </ul>
+    </div>
+    <div class="painel manual">
+      <h3>Só você faz</h3>
+      <ul>
+        <li>Escrever a nota dizendo o que fazer</li>
+        <li>Ler e revisar a minuta entregue</li>
+        <li>Ajustar o que precisar</li>
+        <li>Protocolar no processo</li>
+        <li>Retomar pelo Claude quando a esteira travar</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="gates">
+    <h2>O que nunca muda, mesmo automático</h2>
+    <p class="lede">Quatro travas fixas — não são configuráveis por baixo.</p>
+    <div class="gates-grid">
+      <div class="gate-item"><span class="marca">—</span> Nunca começa uma peça em documento vazio; sempre copia o modelo aprovado do escritório.</div>
+      <div class="gate-item"><span class="marca">—</span> Nunca protocola nada; protocolo é sempre manual, sempre seu.</div>
+      <div class="gate-item"><span class="marca">—</span> Nunca finge ter concluído; se faltar algo, para e avisa.</div>
+      <div class="gate-item"><span class="marca">—</span> Nunca cria tarefa fora do que a intimação real trouxe — sem inventar caso.</div>
+    </div>
+  </section>
+
+  <section class="resumo">
+    <p>Sua equipe nunca abre GitHub nem Claude Code. Ela só vê o <b>Meu Estagiário</b> — igual sempre viu.</p>
+  </section>
+
+  <footer>Kit 3 — a esteira roda sozinha; quem decide continua sendo você.</footer>
+
+</div>

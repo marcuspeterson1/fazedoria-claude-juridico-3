@@ -83,7 +83,7 @@ def montar_kit_root(tmp: Path, colaborador: str) -> Path:
 def criar_tarefa_kit(kit_root: Path, kit_id: str, **extra) -> dict:
     dados = {"schema_version": 1, "id": kit_id, "status": "aberta", "modo": "mvp",
              "cnj": "0000000-00.2026.0.00.0000", "referencia_entrada": "ref", "fonte": "sync",
-             "providencia_sugerida": "", "responsavel": "Marcus Peterson", "criada_por": "Marcus Peterson",
+             "providencia_sugerida": "", "responsavel": "Dono Exemplo", "criada_por": "Dono Exemplo",
              "criada_em": "2026-01-01T00:00:00Z", "entrega": None, "revisao": None, "historico": []}
     dados.update(extra)
     (kit_root / "fila" / f"{kit_id}.json").write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
@@ -98,7 +98,7 @@ class CaptacaoTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
-        self.kit_root = montar_kit_root(self.tmp, "Marcus Peterson")
+        self.kit_root = montar_kit_root(self.tmp, "Dono Exemplo")
         (self.kit_root / ".intimacoes-inbox").mkdir()
         (self.kit_root / ".intimacoes-inbox" / "intimacoes.json").write_text(json.dumps({
             "schema_version": 1, "organizacao_id": "org-1",
@@ -108,7 +108,7 @@ class CaptacaoTests(unittest.TestCase):
             },
         }), encoding="utf-8")
         self.api = FakeAPI()
-        self.api.members = [{"id": "m1", "nome": "Marcus Peterson"}]
+        self.api.members = [{"id": "m1", "nome": "Dono Exemplo"}]
         self.api.tasks = []
 
     def tearDown(self):
@@ -152,16 +152,26 @@ class ParseNotaTests(unittest.TestCase):
         self.assertEqual(motor.id_da_tarefa_kit("[KIT3_TAREFA:20260101-abc] resto"), "20260101-abc")
         self.assertIsNone(motor.id_da_tarefa_kit("sem marcador nenhum"))
 
+    def test_responsavel_opcional_e_extraido_junto_da_providencia(self):
+        info = motor.parse_nota("Responsável: Ana Souza\nGerar manifestação de ciência.")
+        self.assertEqual(info["responsavel"], "Ana Souza")
+        self.assertIn("Gerar manifestação", info["providencia"])
+        self.assertNotIn("Responsável", info["providencia"])
+
+    def test_sem_linha_responsavel_fica_vazio(self):
+        info = motor.parse_nota("Gerar manifestação de ciência.")
+        self.assertEqual(info["responsavel"], "")
+
 
 class CicloTests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
-        self.kit_root = montar_kit_root(self.tmp, "Marcus Peterson")
+        self.kit_root = montar_kit_root(self.tmp, "Dono Exemplo")
         self.kit_id = "20260101-caso"
         criar_tarefa_kit(self.kit_root, self.kit_id)
         self.api = FakeAPI()
-        self.api.members = [{"id": "m1", "nome": "Marcus Peterson"}]
+        self.api.members = [{"id": "m1", "nome": "Dono Exemplo"}, {"id": "m2", "nome": "Ana Souza"}]
         self.api.tasks = [{"id": "me1", "status": "todo",
                             "descricao": f"[KIT3_TAREFA:{self.kit_id}] Referência: ref",
                             "notas": []}]
@@ -178,6 +188,38 @@ class CicloTests(unittest.TestCase):
 
     def tearDown(self):
         self._tmp.cleanup()
+
+    def test_nota_com_responsavel_reatribui_o_card_e_ainda_produz(self):
+        self.api.tasks[0]["notas"].append({
+            "id": "n0", "criada_em": "2025-12-31T00:00:00Z",
+            "texto": "Responsável: Ana Souza\nGerar manifestação de ciência.",
+        })
+        draft = self.tmp / "minuta.md"
+        draft.write_text("<!-- RASCUNHO: NÃO PROTOCOLAR -->\nMinuta de teste.\n", encoding="utf-8")
+
+        def executor_falso(kit_root, prompt):
+            motor.executar_esteira(kit_root, "entregar", self.kit_id, str(draft),
+                                 "--modelo", "modelo-aprovado.docx", "--copia-destino", "Drive/Cliente/peça.docx")
+            return subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
+
+        motor.ciclo(self.kit_root, executor=executor_falso, api=self.api)
+        tarefa = ler_tarefa_kit(self.kit_root, self.kit_id)
+        self.assertEqual(tarefa["responsavel"], "Ana Souza")
+        self.assertEqual(tarefa["status"], "entregue")
+        self.assertEqual(self.api.tasks[0]["responsavel_id"], "m2")
+
+    def test_nome_de_responsavel_desconhecido_pede_correcao_sem_processar(self):
+        self.api.tasks[0]["notas"].append({
+            "id": "n0", "criada_em": "2025-12-31T00:00:00Z",
+            "texto": "Responsável: Pessoa Que Não Existe\nGerar manifestação de ciência.",
+        })
+        relatorio = motor.ciclo(self.kit_root, api=self.api)
+        tarefa = ler_tarefa_kit(self.kit_root, self.kit_id)
+        self.assertEqual(tarefa["status"], "aberta")
+        self.assertIsNone(tarefa.get("automatizar"))
+        self.assertTrue(any("aguardando correção" in linha for linha in relatorio))
+        notas_robo = [n for n in self.api.tasks[0]["notas"] if n["texto"].startswith(motor.MARCADOR_ROBO)]
+        self.assertTrue(any("Não achei exatamente" in n["texto"] for n in notas_robo))
 
     def test_nota_dispara_producao_e_entrega_na_mesma_passada(self):
         self.api.tasks[0]["notas"].append({

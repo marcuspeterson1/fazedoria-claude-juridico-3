@@ -16,20 +16,22 @@
    agendamento roda sem terminal e sem humano pra digitar a chave. Rode
    `python3 motor.py ciclo --kit-root ...` manualmente pelo menos uma vez, mostre o resultado ao
    usuário e só então ofereça `instalar-agendamento`.
-10. Kit 3 é operado por uma pessoa só (o Dono acumula todos os papéis) — não existe "atribuir a
-    outra pessoa". O motor não tenta casar nome nenhum: qualquer nota nova (que não seja dele
-    mesmo) já vira a providência da tarefa, atribuída ao próprio Dono, e o motor tenta produzir a
-    minuta na mesma passada.
-13. Cada ciclo do motor também roda a CAPTAÇÃO primeiro: qualquer intimação pendente já em cache
-    local (`.intimacoes-inbox/intimacoes.json`, atualizado 1x/dia pelo auto-sync do núcleo) vira
-    tarefa e card no Meu Estagiário sozinha, sem decisão humana prévia — a decisão continua
-    existindo, só que dentro do Meu Estagiário, pela nota. Isso é o que fecha o ciclo diário sem
-    o usuário precisar abrir o Claude nenhuma vez.
-11. O motor NUNCA escolhe skill jurídica específica por conta própria além do que o próprio
+10. Kit 3 é operado por uma pessoa só (o Dono acumula todos os papéis) — mas o CARD no Meu
+    Estagiário pode pertencer a outra pessoa real do time, mesmo sem Claude Code. A nota aceita
+    uma linha opcional `Responsável: <nome exato>`; sem ela, o card fica no nome de quem instalou.
+    Com ela, o motor confere o nome contra `/membros` — só aceita correspondência EXATA, nunca
+    aproximada por nome parecido — e, se não achar, devolve nota pedindo correção em vez de
+    adivinhar ou seguir sem responsável.
+11. Cada ciclo do motor roda a CAPTAÇÃO primeiro: qualquer intimação pendente já em cache local
+    (`.intimacoes-inbox/intimacoes.json`, atualizado 1x/dia pelo auto-sync do núcleo) vira tarefa e
+    card no Meu Estagiário sozinha, sem decisão humana prévia — a decisão continua existindo, só
+    que dentro do Meu Estagiário, pela nota. Isso é o que fecha o ciclo diário sem o usuário
+    precisar abrir o Claude nenhuma vez.
+12. O motor NUNCA escolhe skill jurídica específica por conta própria além do que o próprio
     escritório já tiver criado (Ato 2) — sem isso, cai no genérico `gerar-peticao-por-modelo`.
     Não prometa que o motor "sabe" qual petição escrever; ele repete o método, não substitui a
     criação da skill.
-12. Se a minuta não sair sozinha num ciclo, o motor deixa uma nota pedindo continuação humana e
+13. Se a minuta não sair sozinha num ciclo, o motor deixa uma nota pedindo continuação humana e
     NÃO tenta de novo sozinho na tarefa seguinte (evita ficar rodando o mesmo caso indefinidamente
     sem revisão) — quem retoma é um humano abrindo conversa normal no Claude.
 

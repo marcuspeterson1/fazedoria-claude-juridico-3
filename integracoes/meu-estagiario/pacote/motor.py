@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Motor opcional e agendado: fecha o ciclo direto no Meu Estagiário, para quem opera sozinho.
 
-Kit 3 parte de uma pessoa só no Claude Code (o Dono, que acumula todos os papéis) com o Meu
-Estagiário como única interface para o resto da equipe. Sem o motor, o espelhamento
-(`ponte.py`) é sempre manual, um comando por vez. Com o motor instalado (agendado, mesmo padrão
-do auto-sync do núcleo): você escreve uma nota num card já espelhado dizendo o que fazer; o motor
-lê essa nota, registra a providência na fila, e na mesma passada dispara headless a mesma skill
-que você rodaria (/resumo-do-processo + /gerar-peticao-por-modelo), devolvendo o link da minuta
-como nota na mesma tarefa. Não existe "atribuir a outra pessoa": só há você.
+Kit 3 parte de uma pessoa só no Claude Code (o Dono, que acumula todos os papéis e é sempre quem
+opera a esteira) com o Meu Estagiário como única interface para o resto da equipe. Sem o motor, o
+espelhamento (`ponte.py`) é sempre manual, um comando por vez. Com o motor instalado (agendado,
+mesmo padrão do auto-sync do núcleo): você escreve uma nota num card já espelhado dizendo o que
+fazer; o motor lê essa nota, registra a providência na fila, e na mesma passada dispara headless a
+mesma skill que você rodaria (/resumo-do-processo + /gerar-peticao-por-modelo), devolvendo o link
+da minuta como nota na mesma tarefa.
+
+"Quem opera o Kit" (sempre você/a esteira) e "quem deve receber o card no Meu Estagiário" (pode ser
+qualquer pessoa real do escritório, sem Claude Code nenhum) são coisas diferentes. Por padrão o card
+fica com você; a nota pode incluir uma linha `Responsável: <nome exato>` para direcioná-lo a outra
+pessoa do time — o motor só aceita nome que bate exatamente com um cadastro real no Meu Estagiário.
 
 Gates preservados: nunca protocola, nunca nasce de documento vazio, nunca escreve financeiro nem
 sobrescreve skill do Meu Estagiário. Se não concluir sozinho, avisa e pede continuação humana em
@@ -77,10 +82,21 @@ def id_da_tarefa_kit(descricao: str) -> str | None:
 
 
 def parse_nota(texto: str) -> dict[str, Any]:
-    """A nota inteira vira providência; só existe UMA pessoa, então não há responsável a extrair."""
+    """A nota vira providência. Uma linha "Responsável: <nome>" é opcional — sem ela, o card fica
+    com você (comportamento padrão, escritório de uma pessoa só)."""
     if re.match(r"(?i)^\s*n[ãa]o\s+automatizar\b", texto or ""):
-        return {"automatizar": False, "providencia": (texto or "").strip()}
-    return {"automatizar": True, "providencia": (texto or "").strip()}
+        return {"automatizar": False, "providencia": (texto or "").strip(), "responsavel": ""}
+    responsavel = ""
+    resto: list[str] = []
+    for linha in (texto or "").splitlines():
+        bruta = linha.strip()
+        m_resp = re.match(r"(?i)^respons[aá]vel\s*:\s*(.+)$", bruta)
+        if m_resp:
+            responsavel = m_resp.group(1).strip()
+        elif bruta:
+            resto.append(bruta)
+    providencia = " ".join(resto) if resto else (texto or "").strip()
+    return {"automatizar": True, "providencia": providencia, "responsavel": responsavel}
 
 
 def listar_tarefas_kit_no_me(api: instalar.API) -> list[dict[str, Any]]:
@@ -135,13 +151,22 @@ def rodar_claude_headless(kit_root: Path, prompt: str, executor=None) -> subproc
 
 
 def processar_tarefa(api: instalar.API, kit_root: Path, kit_id: str, me_id: str,
-                      providencia: str, executor=None) -> str:
-    """Registra a providência e, na mesma passada, tenta produzir a minuta. Devolve 1 linha de log."""
-    atribuir = executar_esteira(kit_root, "atribuir", kit_id, "--providencia", providencia, "--automatizar")
+                      providencia: str, responsavel: str = "", executor=None) -> str:
+    """Registra providência (e responsável, se dado), tenta produzir a minuta na mesma passada.
+    Devolve 1 linha de log."""
+    args = ["atribuir", kit_id, "--providencia", providencia, "--automatizar"]
+    if responsavel:
+        args += ["--responsavel", responsavel]
+    atribuir = executar_esteira(kit_root, *args)
     if atribuir.returncode != 0:
         postar_nota(api, me_id, f"Não consegui registrar a providência: "
                                  f"{(atribuir.stderr or atribuir.stdout).strip()[:400]}")
         return f"{kit_id}: falhou ao registrar providência."
+    if responsavel:
+        # O card muda de dono no Meu Estagiário na hora, mesmo antes da minuta ficar pronta.
+        tarefa_atribuida = json.loads((kit_root / "fila" / f"{kit_id}.json").read_text(encoding="utf-8"))
+        members = ponte.paged(api, "/membros", "membros")
+        ponte.mirror(api, tarefa_atribuida, members)
     assumir = executar_esteira(kit_root, "assumir", kit_id)
     if assumir.returncode != 0:
         postar_nota(api, me_id, f"Não consegui assumir a tarefa: {assumir.stderr.strip()[:400]}")
@@ -252,7 +277,19 @@ def ciclo(kit_root: Path, executor=None, api: instalar.API | None = None) -> lis
                 break
             if not info["providencia"]:
                 continue
-            relatorio.append(processar_tarefa(api, kit_root, kit_id, me_id, info["providencia"], executor))
+            responsavel_resolvido = ""
+            if info["responsavel"]:
+                members = ponte.paged(api, "/membros", "membros")
+                membro_id = ponte.exact_member(members, info["responsavel"])
+                if not membro_id:
+                    postar_nota(api, me_id, f"Não achei exatamente um membro chamado "
+                                             f"\"{info['responsavel']}\" no Meu Estagiário. Confira "
+                                             f"o nome e responda de novo com o nome exato.")
+                    relatorio.append(f"{kit_id}: responsável não identificado — aguardando correção.")
+                    break
+                responsavel_resolvido = info["responsavel"]
+            relatorio.append(processar_tarefa(api, kit_root, kit_id, me_id, info["providencia"],
+                                               responsavel_resolvido, executor))
             break  # a tarefa mudou de status nesta passada; a próxima nota (se houver) espera o próximo ciclo
     salvar_estado(kit_root, estado)
     return relatorio

@@ -21,6 +21,9 @@ o ciclo sozinho: você escreve uma nota num card já espelhado dizendo o que faz
 providência, dispara headless a mesma skill de produção que você rodaria, e devolve o link da minuta
 como nota na mesma tarefa. Revisão humana e protocolo manual continuam separados, sempre.
 
+📄 **[Veja o dia a dia em formato visual, sem termo técnico: `POP-DIA-A-DIA.html`](POP-DIA-A-DIA.html)**
+(abra em qualquer navegador) — quem faz o quê, o que roda sozinho e o que depende de você.
+
 ## Instalação guiada — um prompt só
 
 Você envia um único prompt ao Claude Code na pasta permanente `Claude`; não precisa abrir Terminal ou
@@ -101,7 +104,9 @@ roda sem você abrir o Claude:
    intimações novas no Sync.
 2. A cada 10 minutos, o motor pega as intimações novas e, sozinho, cria a tarefa e o card
    correspondente no Meu Estagiário — sem esperar ninguém decidir nada.
-3. Você lê o card no Meu Estagiário e escreve uma nota dizendo o que fazer.
+3. Você lê o card no Meu Estagiário e escreve uma nota dizendo o que fazer. Se o caso for de outra
+   pessoa do seu time, a nota pode incluir `Responsável: <nome exato>` para o card passar a
+   aparecer para ela — mesmo sem Claude Code, sem instalação nenhuma da parte dela.
 4. No ciclo seguinte (até 10 minutos depois), o motor lê essa nota, registra a providência e já
    tenta produzir a minuta sozinho, headless.
 5. Se conseguir, devolve o link da minuta como nota no mesmo card, pronta para revisão. Se não
@@ -170,9 +175,16 @@ da instalação inicial. Uma vez agendado, o motor faz DUAS coisas a cada passad
 nova já em cache local (o auto-sync do núcleo consulta o Sync 1x/dia) e cria sozinho a tarefa + o
 card correspondente no Meu Estagiário, sem esperar decisão nenhuma; (2) lê nota nova em qualquer card
 já espelhado, registra como providência e já tenta produzir a minuta headless na mesma passada,
-devolvendo o link como nota. Como você acumula todos os papéis, não existe "atribuir a outra
-pessoa" — a nota já é a ordem de partida. É o trecho mais novo do Kit; a primeira rodada deve ser
-acompanhada. Detalhe completo em `integracoes/meu-estagiario/pacote/INSTRUCOES_AGENTE.md`.
+devolvendo o link como nota.
+
+Quem opera o Kit (quem roda a esteira) é sempre você — isso não muda. Mas o card no Meu Estagiário
+pode pertencer a QUALQUER pessoa real do seu time, mesmo sem Claude Code nenhum: a nota aceita uma
+linha opcional `Responsável: <nome exato>`. Sem essa linha, o card continua no seu nome. Com ela, o
+motor confere o nome contra o cadastro real do Meu Estagiário (só aceita correspondência exata — sem
+isso, devolve uma nota pedindo o nome certo, nunca adivinha) e o card passa a aparecer para aquela
+pessoa, mesmo a produção continuando a acontecer por baixo do mesmo jeito. É o trecho mais novo do
+Kit; a primeira rodada deve ser acompanhada. Detalhe completo em
+`integracoes/meu-estagiario/pacote/INSTRUCOES_AGENTE.md`.
 
 ### Advbox
 

@@ -45,8 +45,11 @@ coisas passam a acontecer sozinhas, agendadas:
    você rodaria (`/resumo-do-processo` + `/gerar-peticao-por-modelo`), devolvendo o link da minuta
    como nota na mesma tarefa.
 
-Como o Kit 3 é de uma pessoa só, não existe "atribuir a outra pessoa" — a nota já é a ordem de
-partida. Nada disso protocola nem pula a revisão humana.
+Quem opera o Kit é sempre você — isso não muda. Mas o card pode pertencer a outra pessoa real do
+seu time, mesmo sem Claude Code: inclua na nota uma linha `Responsável: <nome exato>` e o motor
+confere contra o cadastro do Meu Estagiário (só aceita nome que bate exatamente; sem isso, pede
+correção em vez de adivinhar) e reatribui o card. Sem essa linha, o card fica com você. Nada disso
+protocola nem pula a revisão humana.
 
 ```bash
 python3 motor.py ciclo --kit-root /caminho/do/clone           # uma passada manual, pra testar

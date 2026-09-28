@@ -322,6 +322,11 @@ def cmd_assign(a):
         raise SystemExit("Só é possível preparar automação em tarefas ainda abertas.")
     if a.providencia:
         data["providencia_sugerida"] = a.providencia
+    if a.responsavel:
+        # Quem opera o Kit continua sendo sempre o Dono (campo "advogado", fixado em cmd_claim).
+        # "responsavel" aqui é só quem deve RECEBER o card no software jurídico conectado — pode
+        # ser qualquer pessoa do time real, mesmo sem Claude Code.
+        data["responsavel"] = a.responsavel
     if a.automatizar:
         data["automatizar"] = True
     event(data, "providencia_atualizada", local["colaborador"], a.providencia or "")
@@ -625,7 +630,7 @@ def parser():
     q = sub.add_parser("checar-intimacoes"); q.add_argument("--somente-se-dia-novo", action="store_true"); q.add_argument("--silencioso", action="store_true"); q.set_defaults(fn=cmd_check_intimations)
     q = sub.add_parser("importar-intimacao"); q.add_argument("id_sync", type=int); q.add_argument("--providencia", required=True); q.set_defaults(fn=cmd_import_intimation)
     q = sub.add_parser("listar"); q.add_argument("--status"); q.set_defaults(fn=cmd_list)
-    q = sub.add_parser("atribuir"); q.add_argument("id"); q.add_argument("--providencia", default=""); q.add_argument("--automatizar", action="store_true"); q.set_defaults(fn=cmd_assign)
+    q = sub.add_parser("atribuir"); q.add_argument("id"); q.add_argument("--providencia", default=""); q.add_argument("--responsavel", default=""); q.add_argument("--automatizar", action="store_true"); q.set_defaults(fn=cmd_assign)
     q = sub.add_parser("assumir"); q.add_argument("id"); q.set_defaults(fn=cmd_claim)
     q = sub.add_parser("contexto"); q.add_argument("id"); q.set_defaults(fn=cmd_context)
     q = sub.add_parser("entregar"); q.add_argument("id"); q.add_argument("arquivo"); q.add_argument("--modelo", required=True); q.add_argument("--copia-destino", required=True); q.set_defaults(fn=cmd_submit)

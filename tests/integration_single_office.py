@@ -38,9 +38,9 @@ with tempfile.TemporaryDirectory(prefix="kit3-ensaio-") as tmp:
     git(base, "clone", "--bare", str(seed), str(bare))
     escritorio = base / "escritorio"
     git(base, "clone", str(bare), str(escritorio))
-    git(escritorio, "config", "user.name", "Marcus Peterson"); git(escritorio, "config", "user.email", "marcus@example.invalid")
+    git(escritorio, "config", "user.name", "Dono Exemplo"); git(escritorio, "config", "user.email", "dono@example.invalid")
 
-    run(escritorio, sys.executable, "esteira.py", "iniciar-escritorio", "--nome", "Marcus Peterson",
+    run(escritorio, sys.executable, "esteira.py", "iniciar-escritorio", "--nome", "Dono Exemplo",
         "--escritorio", "Escritório Exemplo", "--agente", "claude", "--repositorio", str(bare))
     run(escritorio, sys.executable, "esteira.py", "configurar-documentos", "--onde-modelos", "Pasta de modelos aprovados",
         "--pastas-clientes", "sim", "--destino-copia", "Pasta do cliente", "--padrao-nomes", "TIPO - CLIENTE - DATA")

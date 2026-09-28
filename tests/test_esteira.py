@@ -33,7 +33,7 @@ class EsteiraTests(unittest.TestCase):
              mock.patch.object(esteira, "LOCAL", Path(d) / ".escritorio.local.json"), \
              mock.patch.object(esteira, "SHARED", Path(d) / "escritorio.json"):
             esteira.save(esteira.SHARED, {"nome_escritorio": "CONFIGURE-ME", "organizacao": None, "modo": "mvp"})
-            parsed = esteira.parser().parse_args(["iniciar-escritorio", "--nome", "Marcus", "--escritorio", "E",
+            parsed = esteira.parser().parse_args(["iniciar-escritorio", "--nome", "Dono Exemplo", "--escritorio", "E",
                                                 "--repositorio", "https://example.invalid/r"])
             parsed.fn(parsed)
             local = esteira.load(esteira.LOCAL)
@@ -145,6 +145,11 @@ class EsteiraTests(unittest.TestCase):
                 encoding="utf-8")
             with mock.patch.object(kit_sync.Path, "home", return_value=home), mock.patch.dict(os.environ, {}, clear=True):
                 self.assertEqual(kit_sync.descobrir_chave_existente("org"), (None, None))
+
+    def test_assign_accepts_optional_responsavel_for_the_connected_software(self):
+        parsed = esteira.parser().parse_args(["atribuir", "tarefa", "--providencia", "x",
+                                               "--responsavel", "Ana Souza", "--automatizar"])
+        self.assertEqual(parsed.responsavel, "Ana Souza")
 
     def test_windows_subprocesses_are_hidden(self):
         with mock.patch.object(esteira.platform, "system", return_value="Windows"):
