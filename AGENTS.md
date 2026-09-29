@@ -8,12 +8,9 @@ Antes de operar, crie/conecte um repositório privado do escritório e registre 
 configuração local. Sem a confirmação, `criar-tarefa` deve permanecer bloqueado.
 
 - Comece sempre em `mvp`. O Sync é a fonte obrigatória de autos e permanece estritamente em leitura;
-  nesse modo, não escreva no Sync, Infinitum, Esteira, Meu Estagiário, processo vivo ou qualquer
-  sistema externo.
-- Fora da instalação inicial, o Dono pode instalar conscientemente um conector opcional. Para o
-  aluno que permanece na ADVBOX, somente o pacote oficial pode criar tarefas `[KIT3]` em `/posts`,
-  após simulação e leitura de volta. Isso não autoriza alterar processos, autos, financeiro ou
-  protocolo, nem habilita escrita na conta ADVBOX de outro escritório.
+  nesse modo, não escreva no Sync, no Meu Estagiário, no processo vivo ou em qualquer sistema externo.
+- Fora da instalação inicial, o Dono pode conectar conscientemente o Meu Estagiário (o único conector
+  deste Kit) — só depois de comprovar o núcleo funcionando, nunca misturado com a instalação inicial.
 - A trava de leitura vale também para integrações antigas já instaladas na máquina. Nunca marque
   intimação como tratada, altere monitoramento, acuse ciência, crie registro ou reutilize uma rotina
   de escrita de outra esteira. "Mostrar intimações" significa somente ler e apresentar.

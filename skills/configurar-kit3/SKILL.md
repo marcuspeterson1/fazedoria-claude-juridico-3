@@ -1,45 +1,59 @@
 ---
 name: configurar-kit3
-description: Configura o Kit 3 para o Dono — uma pessoa só, todos os papéis.
+description: Instala o Kit 3 do zero — uma pessoa só, um único passo a passo, sem termo técnico.
 ---
 
 # Configurar Kit 3
 
-Leia `README.md` e audite o repositório público, que é apenas o molde. Existe um único instalador:
-o Dono. Ele cria o repositório privado e usa `iniciar-escritorio`, que já registra os três papéis
-(dono, controller, advogado) na mesma identidade — não pergunte se outra pessoa vai acumular papel
-nenhum, e não crie convite ou código de entrada: este Kit não tem esse mecanismo. O resto da equipe
-do escritório nunca abre GitHub nem Claude Code aqui; ela interage só pelo software jurídico
-(Meu Estagiário, Advbox etc.), configurado depois do núcleo.
+Leia `README.md` primeiro. O repositório público é só o molde — um modelo vazio, sem nenhum dado real
+de cliente. A instalação real acontece dentro de um repositório PRIVADO próprio do escritório, que o
+Claude cria pra você.
 
-Conduza como tutor de iniciante absoluto: uma pergunta e uma ação por vez, analogias simples,
-explicação do motivo, checkpoint visual e correção paciente dos erros, sem infantilizar a pessoa.
-Instale silenciosamente Python 3 oficial se faltar; não ofereça escolhas técnicas ao iniciante.
-Se não existir conta GitHub, abra a página oficial de criação no navegador e acompanhe a pessoa passo
-a passo; ela própria digita senha, confirmação de e-mail e autenticação. Depois autentique o GitHub
-CLI pelo navegador e identifique a conta ativa sem exibir tokens. Nunca peça token na conversa. Crie
-uma pasta padrão para casos, execute `instalar-skills` e `preparar-auto-sync`; instale o arquivo de
-agendamento gerado pelo mecanismo nativo do sistema, sem editar seu intervalo de dez minutos. Termine
-com `diagnosticar`, comprove uma sincronização e traduza o resultado em checkpoints simples.
+## Quem instala
 
-No encerramento, não diga apenas que a instalação terminou. Mostre um cartão destacado chamado
-"Como começar uma nova conversa no Claude" e peça que a pessoa o guarde:
+Uma pessoa só, sempre — não existe convite nem "código de entrada" pra mais ninguém entrar. Rode
+`iniciar-escritorio`: isso já registra você com todos os papéis de uma vez (não pergunte nada sobre
+"quem mais vai usar", não existe essa opção neste Kit). O resto da equipe do escritório nunca vai
+precisar abrir GitHub nem Claude Code — quem quiser participar do dia a dia faz isso só pelo Meu
+Estagiário, se e quando você conectar essa parte (ver seção "Conectar o software jurídico" abaixo).
 
+## Como instalar, passo a passo
+
+Conduza como se a pessoa nunca tivesse usado nada disso na vida: uma pergunta e uma ação de cada vez,
+explique o porquê de cada passo com palavras simples, mostre um resultado visível a cada etapa
+concluída, e corrija erros com paciência, sem soar como se a pessoa devesse já saber.
+
+1. Se faltar o Python no computador, instale sozinho, sem perguntar qual versão ou método — a pessoa
+   não precisa decidir isso.
+2. Se não existir conta no GitHub, abra a página oficial de cadastro no navegador e acompanhe junto;
+   a própria pessoa digita a senha e confirma o e-mail (você nunca faz isso por ela). Depois autentique
+   o GitHub pelo navegador e identifique a conta certa sem nunca mostrar token na tela.
+3. Crie uma pasta padrão para os casos do escritório, rode `instalar-skills` e `preparar-auto-sync`.
+   Isso instala um agendamento no próprio computador que sincroniza tudo sozinho, a cada 10 minutos.
+4. Termine com `diagnosticar` — mostra uma lista simples de "OK" pra cada item que já está funcionando.
+
+## O que mostrar no final
+
+Não basta dizer "pronto". Mostre um cartão destacado assim:
+
+**Como começar uma nova conversa no Claude, todo dia:**
 `/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.`
 
-Explique expressamente que não é preciso reinstalar o Kit, repetir o nome do escritório ou cadastrar
-novamente a chave do Sync em cada conversa.
+Deixe claro: não precisa instalar de novo, nem repetir o nome do escritório, nem cadastrar a chave do
+Sync outra vez — isso já fica guardado.
 
-O Sync é obrigatório como fonte de autos em operação. Antes de pedir chave ou sugerir outro local,
-execute `configurar-sync`: ele procura e valida uma integração do Sync já existente nas variáveis e
-arquivos seguros explicitamente reconhecidos pelo Kit, reutilizando-a sem mover, exibir ou duplicar
-o segredo. Nunca vasculhe configurações gerais do Claude em busca de chaves. Somente se não encontrar
-acesso válido, abra a entrada segura nativa sem receber a chave na conversa, argumento ou Git; valide
-com `testar-sync`. Quando assumir tarefa, execute `contexto`: ele materializa localmente a cronologia
-e os Markdowns em pasta ignorada pelo Git.
+## O Sync (de onde vêm os processos)
 
-Depois que o núcleo estiver comprovado, pergunte se o Dono quer operar apenas com Claude + GitHub ou
-conectar um software jurídico. Pergunte qual sistema utiliza — Infinitum, Meu Estagiário, Advbox,
-Astrea, CPJ, ProJuris, outro ou nenhum — e se quer prosseguir agora com a instalação guiada. Se
-escolher Meu Estagiário, Advbox ou Infinitum, use `conectar-software-juridico`; não misture essa
-etapa opcional com a instalação inicial do núcleo.
+O Sync é obrigatório — é dele que vêm as intimações e os autos dos processos, e o Kit só LÊ, nunca
+escreve nele. Antes de pedir a chave, rode `configurar-sync`: ele procura sozinho se já existe uma
+chave guardada em algum lugar seguro reconhecido (nunca vasculha configurações gerais do Claude à
+toa) e reaproveita sem duplicar. Só se não achar nada, abre uma caixa segura própria do computador
+pra pessoa colar a chave — nunca na conversa, nunca num argumento de comando, nunca no Git. Confirme
+com `testar-sync`.
+
+## Conectar o software jurídico (opcional, depois do núcleo)
+
+Só depois que o núcleo estiver funcionando e comprovado, pergunte se a pessoa quer conectar o Meu
+Estagiário — o software onde o escritório já organiza as tarefas do dia a dia. É opcional e pode ser
+feito depois, em outra conversa; nunca misture essa etapa com a instalação inicial. Se a resposta for
+sim, use a skill `conectar-meu-estagiario`.

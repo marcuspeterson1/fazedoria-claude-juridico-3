@@ -16,9 +16,7 @@
   },
   "conectores": {
     "sync": {"habilitado": true, "obrigatorio": true, "somente_leitura": true},
-    "infinitum": {"habilitado": false},
-    "meu_estagiario": {"habilitado": false, "modo": "espelho_operacional"},
-    "advbox": {"habilitado": false, "modo": "advbox_operacional"}
+    "meu_estagiario": {"habilitado": false, "modo": "espelho_operacional"}
   },
   "gates": {
     "revisao_humana": true,

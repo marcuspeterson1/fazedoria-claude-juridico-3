@@ -1,28 +1,29 @@
 # Kit 3 - Ligando o Motor da sua Esteira
 
-Versão 3.0.0. Kit 3 é operado por **uma pessoa só** — você, o Dono, acumulando todos os papéis num
-único Claude Code. Não existe convite, código de colaborador nem clone de segunda pessoa: o resto da
-sua equipe só interage pelo Meu Estagiário (ou outro software jurídico que você já usa), nunca com
-GitHub ou Claude Code. É assim que uma esteira de petições real começa a funcionar.
+Versão 3.0.0. Este Kit monta uma esteira de petições operada por **uma pessoa só** — você, o Dono,
+num único Claude Code — com o **Meu Estagiário** como única interface para o resto da equipe. Não
+existe convite, código de colaborador nem clone de segunda pessoa: sua equipe nunca abre GitHub nem
+Claude Code, só o Meu Estagiário, como sempre usou.
 
-O repositório público deste Kit é apenas o molde, sem dados. Durante a instalação, o Claude cria um
-novo repositório **privado** para o seu escritório — a fonte canônica do que você faz, sob sua própria
-conta do GitHub. O núcleo funciona sem software jurídico nenhum:
+📄 **[Veja o dia a dia explicado em linguagem simples, com analogias: `POP-DIA-A-DIA.md`](POP-DIA-A-DIA.md)**
+— quem faz o quê, o que roda sozinho, o que ainda depende de você. Comece por ali se quiser entender
+antes de instalar.
+
+O repositório público deste Kit é apenas o molde, sem dados reais de nenhum caso. Durante a
+instalação, o Claude cria um novo repositório **privado** para o seu escritório — a fonte canônica do
+que você faz, sob sua própria conta do GitHub. O núcleo funciona mesmo sem nenhum software conectado:
 
 `Sync (autos, leitura) → sua fila → você produz → você revisa → proposta → skill`
 
-O Sync é obrigatório como fonte de autos. Infinitum, Meu Estagiário e Advbox são conectores opcionais,
-instalados só depois de você comprovar o núcleo funcionando. O modo inicial é `mvp`: trabalha com
-tarefas reais e permite leitura dos autos no Sync, mas mantém bloqueada qualquer escrita em sistemas
-externos.
+O Sync é obrigatório: é dele que vêm as intimações e os autos dos processos, sempre em modo leitura.
+O Meu Estagiário é opcional e só entra depois de você comprovar que o núcleo já está funcionando. O
+modo inicial é `mvp`: trabalha com tarefas reais e lê os autos no Sync, mas mantém bloqueada qualquer
+escrita em sistema externo até você conectar algo de propósito.
 
 Com o Meu Estagiário conectado, um **motor opcional** (instalado à parte, nunca junto do núcleo) fecha
-o ciclo sozinho: você escreve uma nota num card já espelhado dizendo o que fazer, e o motor registra a
-providência, dispara headless a mesma skill de produção que você rodaria, e devolve o link da minuta
-como nota na mesma tarefa. Revisão humana e protocolo manual continuam separados, sempre.
-
-📄 **[Veja o dia a dia em formato visual, sem termo técnico: `POP-DIA-A-DIA.html`](POP-DIA-A-DIA.html)**
-(abra em qualquer navegador) — quem faz o quê, o que roda sozinho e o que depende de você.
+o ciclo sozinho: intimação nova vira card sozinha, você escreve uma nota dizendo o que fazer, e o
+motor produz a minuta headless e devolve o link como nota na mesma tarefa. Revisão humana e protocolo
+manual continuam separados, sempre.
 
 ## Instalação guiada — um prompt só
 
@@ -62,43 +63,34 @@ segundo plano. Antes de mostrar a fila, sincronize silenciosamente; depois de as
 revisar ou criar uma tarefa/skill, salve e envie silenciosamente. Não ensine Git nem peça comandos.
 
 Explique conceitos com palavras simples, uma ação por vez e checkpoints curtos. Não solicite nem
-grave tokens na conversa ou no Git. Não habilite Infinitum, Meu Estagiário, Advbox nem escrita em
-sistema externo nesta etapa inicial. Ao final, rode o diagnóstico e mostre apenas o que está pronto e
+grave tokens na conversa ou no Git. Não conecte o Meu Estagiário nem habilite escrita em sistema
+externo nesta etapa inicial. Ao final, rode o diagnóstico e mostre apenas o que está pronto e
 qualquer ação pessoal inevitável.
 ```
 
-## Fluxo operacional
+## Como o trabalho acontece no dia a dia
 
-O computador executa `iniciar-escritorio` uma única vez. Depois:
+O computador executa `iniciar-escritorio` uma única vez. Depois disso, o trabalho segue três
+momentos — não são papéis diferentes, é você mesmo, em horas diferentes do dia:
 
-- `python3 esteira.py instalar-skills` liga a fonte canônica aos diretórios reconhecidos por Claude Code
-  e Codex, preservando qualquer instalação preexistente.
-- A skill `resumo-do-processo` transforma os autos obtidos no Sync em um resumo jurídico padronizado
-  antes da escolha e execução da peça.
-- A skill `gerar-peticao-por-modelo` copia o modelo aprovado, preserva a identidade visual e mantém
-  apenas os tópicos jurídicos aplicáveis, com registro do modelo e do destino da cópia.
-- `python3 esteira.py preparar-auto-sync` cria os arquivos locais para sincronização conservadora a cada
-  dez minutos e consulta, no máximo uma vez por dia, a caixa de intimações no Sync. O Claude
-  instala/ativa o agendamento nativo do sistema e comprova uma execução.
+1. **Triagem**: você olha as intimações novas (`checar-intimacoes`) e decide o que fazer com cada
+   uma (`importar-intimacao`), ou cria uma tarefa direto (`criar-tarefa`).
+2. **Execução**: você assume a tarefa (`assumir`), pega os autos (`contexto`), o Claude copia o
+   modelo aprovado e produz a peça, e você registra a entrega (`entregar`).
+3. **Revisão**: você aprova, pede ajuste ou reprova (`revisar`). Se aprender algo que vale a pena
+   virar regra permanente, propõe (`propor-skill`) e depois promove (`promover-skill`).
 
-1. Triagem: `checar-intimacoes`; escolhe um item e confirma a providência com `importar-intimacao`, ou
-   cria diretamente com `criar-tarefa`.
-2. Execução: `listar`, `assumir ID`, `contexto ID`, copia o modelo aprovado, produz a peça e usa
-   `entregar ID ARQUIVO --modelo IDENTIFICAÇÃO --copia-destino DESTINO`.
-3. Revisão: `revisar ID aprovada|ajustes|reprovada --feedback ...`.
-4. Se houver aprendizado reutilizável: `propor-skill`; depois de revisar, `promover-skill`.
-
-A skill `executar-tarefa` cobre as quatro etapas — não são papéis diferentes, é o mesmo Claude
-ajudando você em momentos diferentes do dia. Toda mutação operacional cria commit e sincroniza
-automaticamente; em conflito, o Kit para e preserva o estado para conciliação, sem apagar versões.
+A skill `executar-tarefa` cobre os três momentos. Toda mutação cria commit e sincroniza sozinha; se
+houver conflito (por exemplo, você usando dois computadores), o Kit para e preserva os dois lados
+para você decidir — nunca escolhe nem apaga nada sozinho.
 
 ## O que roda sozinho, e o que ainda depende de você abrir o Claude
 
-Sem o Meu Estagiário conectado, o Kit é MVP: nada cria tarefa sozinho, e você só vê a fila abrindo o
-Claude e mandando `/executar-tarefa Mostre minha fila e me ajude a executar a próxima tarefa.`.
+Sem o Meu Estagiário conectado, o Kit é só o núcleo: nada cria tarefa sozinho, e você acompanha tudo
+abrindo o Claude e mandando `/executar-tarefa Mostre minha fila e me ajude a executar a próxima
+tarefa.`.
 
-Com o Meu Estagiário conectado e o motor agendado (`integracoes/meu-estagiario/`), o ciclo diário
-roda sem você abrir o Claude:
+Com o Meu Estagiário conectado e o motor agendado, o ciclo diário roda sem você abrir o Claude:
 
 1. A cada 10 minutos, o agendamento do núcleo sincroniza a fila e, no máximo 1x por dia, consulta
    intimações novas no Sync.
@@ -130,76 +122,34 @@ personalização conflitante em arquivo oficial, mantém as duas versões para d
 - `status`: registra autor, horário, transição e hash da entrega.
 - `promover-skill`: só aceita proposta de tarefa aprovada e nunca sobrescreve skill existente.
 
-## Escritório real
+## Conectar o Meu Estagiário (opcional, depois do núcleo)
 
-O Kit inclui apenas contratos de conectores. A promoção para uso real exige edição consciente de
-`escritorio.json`, revisão dos adaptadores e teste próprio. O Sync permanece somente leitura. Este
-Kit não implementa protocolo automático. O adaptador Infinitum é uma interface opcional, não uma
-integração ativa nem uma credencial embutida.
+O assistente primeiro instala, diagnostica e comprova o núcleo Claude + GitHub funcionando sozinho.
+Só depois pergunta se você quer conectar o Meu Estagiário — o único software de gestão que este Kit
+integra — e se quer fazer isso agora ou continuar só com o núcleo por enquanto. Essa etapa nunca
+interrompe nem condiciona a instalação inicial.
 
-## Escolha do software jurídico
+Para conectar, use o instalador em `integracoes/meu-estagiario/` (skill `conectar-meu-estagiario`).
+Ele confere sua conta de verdade contra a API do Meu Estagiário, guarda só o NOME da variável de
+credencial (nunca a chave em si) e faz um teste sintético antes de declarar qualquer coisa pronta: cria
+uma tarefa claramente marcada como teste, confirma por leitura de volta que ela mudou de status de
+verdade, escreve uma nota avisando que é teste, e arquiva no final — nenhum caso real é tocado.
+`ponte.py` liga cada card ao ID estável do Kit e nunca duplica.
 
-O assistente primeiro instala, diagnostica e comprova o núcleo Claude + GitHub. Somente depois
-pergunta qual software você usa — Infinitum, Meu Estagiário, ADVBOX, Astrea, CPJ, ProJuris, outro ou
-nenhum — e se você quer prosseguir agora com a instalação guiada. A integração opcional não interrompe
-nem condiciona a instalação inicial. Nunca empurre um produto.
+`ponte.py` sozinho é sob demanda — espelha uma tarefa de cada vez, quando chamado. Para o ciclo
+fechar sozinho, use `motor.py` (`integracoes/meu-estagiario/pacote/motor.py`), instalado e agendado à
+parte, nunca junto da instalação inicial. Uma vez agendado, o motor faz DUAS coisas a cada passada:
+(1) pega intimação nova já em cache local e cria sozinho a tarefa + o card correspondente, sem esperar
+decisão nenhuma; (2) lê nota nova em qualquer card já espelhado, registra como providência e já tenta
+produzir a minuta headless na mesma passada, devolvendo o link como nota.
 
-- Sem software: use a fila GitHub do núcleo.
-- Infinitum: use o instalador portátil em `integracoes/infinitum/` e siga integralmente suas instruções.
-- Meu Estagiário: use o instalador em `integracoes/meu-estagiario/`. Ele valida a API, registra a
-  configuração apenas no computador, executa teste sintético e oferece espelhamento idempotente.
-- ADVBOX: use o instalador em `integracoes/advbox/`. Você continua na ADVBOX; o Claude audita a API,
-  completa pela interface os tipos de tarefa e os fluxos e configura a ponte que cria tarefas da
-  Esteira dentro do próprio software.
-- Outro software: localize a documentação oficial da API, guarde a chave localmente, compare as
-  capacidades com o modelo ideal e não prometa o que a API não permite.
-
-### Infinitum
-
-O pacote integrado cria ou reutiliza o cadastro `Casos`, oito fases, quinze campos e duas automações.
-É idempotente, não exclui estruturas e pode exigir que o agente configure `Casos` pela interface.
-O token fica somente no computador. Instalar a estrutura não instala o worker que gera minutas;
-revisão humana, aprovação jurídica e protocolo manual continuam separados.
-
-### Meu Estagiário
-
-O instalador valida identidade, escopos, membros, tipos de tarefa e etapas de caso contra a API ao
-vivo. A configuração guarda apenas o nome da variável de credencial. O teste opcional cria uma tarefa
-sintética, confirma por leitura de volta os estados `Em andamento` e `Em revisão`, escreve uma nota
-técnica e arquiva o teste. `ponte.py` localiza o card pelo ID estável do Kit e cria ou atualiza sem
-duplicar.
-
-`ponte.py` sozinho é execução sob demanda, uma tarefa por chamada. Para o ciclo fechar sozinho, use
-`motor.py` (`integracoes/meu-estagiario/pacote/motor.py`), instalado e agendado à parte, nunca junto
-da instalação inicial. Uma vez agendado, o motor faz DUAS coisas a cada passada: (1) pega intimação
-nova já em cache local (o auto-sync do núcleo consulta o Sync 1x/dia) e cria sozinho a tarefa + o
-card correspondente no Meu Estagiário, sem esperar decisão nenhuma; (2) lê nota nova em qualquer card
-já espelhado, registra como providência e já tenta produzir a minuta headless na mesma passada,
-devolvendo o link como nota.
-
-Quem opera o Kit (quem roda a esteira) é sempre você — isso não muda. Mas o card no Meu Estagiário
-pode pertencer a QUALQUER pessoa real do seu time, mesmo sem Claude Code nenhum: a nota aceita uma
-linha opcional `Responsável: <nome exato>`. Sem essa linha, o card continua no seu nome. Com ela, o
-motor confere o nome contra o cadastro real do Meu Estagiário (só aceita correspondência exata — sem
-isso, devolve uma nota pedindo o nome certo, nunca adivinha) e o card passa a aparecer para aquela
-pessoa, mesmo a produção continuando a acontecer por baixo do mesmo jeito. É o trecho mais novo do
-Kit; a primeira rodada deve ser acompanhada. Detalhe completo em
+Quem opera o Kit (quem roda a esteira) é sempre você — isso não muda. Mas o card pode pertencer a
+QUALQUER pessoa real do seu time, mesmo sem Claude Code: a nota aceita uma linha opcional
+`Responsável: <nome exato>`. Sem essa linha, o card continua no seu nome. Com ela, o motor confere o
+nome contra o cadastro real do Meu Estagiário — só aceita correspondência exata, nunca adivinha — e o
+card passa a aparecer para aquela pessoa, mesmo a produção continuando a acontecer por baixo do mesmo
+jeito. É o trecho mais novo do Kit; a primeira rodada deve ser acompanhada. Detalhe completo em
 `integracoes/meu-estagiario/pacote/INSTRUCOES_AGENTE.md`.
-
-### Advbox
-
-O instalador é híbrido porque a API pública não cria tipos de tarefa nem toda a configuração do
-Flowter. Ele lê `/settings`, identifica o que falta e conduz um usuário Gestor pela interface para
-criar oito tarefas `[KIT3]` e três fluxos: produção/revisão, refação e protocolo manual. Uma captura
-da configuração é registrada por hash antes da aprovação.
-
-`ponte.py` cria na própria ADVBOX a próxima tarefa da Esteira, primeiro em simulação. A escrita é
-limitada a `POST /posts`, usa marcador idempotente e exige leitura de volta por ID. O pacote não
-altera cliente, processo, movimentação ou financeiro. O Sync continua sendo a fonte dos autos.
-
-Esta versão é prévia: entrega estrutura e ponte sob demanda. Um worker contínuo ainda precisa ser
-instalado posteriormente por polling da API ou webhook HTTP do Flowter e comprovado ponta a ponta
-antes de ser anunciado como automático.
 
 ## Caixa de entrada de intimações
 
